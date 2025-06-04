@@ -23,6 +23,7 @@ class User extends Authenticatable implements JWTSubject
         'name',
         'email',
         'username',
+        'role',
         'password',
     ];
 
@@ -48,6 +49,50 @@ class User extends Authenticatable implements JWTSubject
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Role constants
+     */
+    const ROLE_ADMIN = 'Admin';
+    const ROLE_PROJECT_MANAGER = 'Project Manager';
+    const ROLE_TEAM_MEMBER = 'Team Member';
+
+    /**
+     * Check if user is Admin
+     */
+    public function isAdmin()
+    {
+        return $this->role === self::ROLE_ADMIN;
+    }
+
+    /**
+     * Check if user is Project Manager
+     */
+    public function isProjectManager()
+    {
+        return $this->role === self::ROLE_PROJECT_MANAGER;
+    }
+
+    /**
+     * Check if user is Team Member
+     */
+    public function isTeamMember()
+    {
+        return $this->role === self::ROLE_TEAM_MEMBER;
+    }
+
+    /**
+     * Get all available roles
+     */
+    public static function getRoles()
+    {
+        return [
+            self::ROLE_ADMIN,
+            self::ROLE_PROJECT_MANAGER,
+            self::ROLE_TEAM_MEMBER,
+        ];
+    }
+
 
     public function getJWTIdentifier()
     {

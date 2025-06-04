@@ -25,6 +25,8 @@ export default function Login({
 
         post(route("login"), {
             onFinish: () => reset("password"),
+            preserveState: true,
+            preserveScroll: true
         });
     };
 
@@ -91,6 +93,13 @@ export default function Login({
                 </div>
 
                 <div className="mt-4 flex items-center justify-end">
+                    <Link
+                        href={route("register")}
+                        className="me-4 text-sm text-gray-600 underline hover:text-gray-900"
+                    >
+                        Need an account?
+                    </Link>
+
                     {canResetPassword && (
                         <Link
                             href={route("password.request")}
