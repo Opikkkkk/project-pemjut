@@ -1,5 +1,4 @@
-import { LayoutDashboard, UserRoundCog, Zap } from "lucide-react";
-
+import { LayoutDashboard, UserRoundCog, UserPen, Zap, ReceiptText, FolderKanban, User } from "lucide-react";
 import {
     Sidebar,
     SidebarContent,
@@ -10,22 +9,55 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/Components/ui/sidebar";
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
+
+// Add type for user
+interface User {
+    role?: string;
+}
+
+interface PageProps {
+    auth: {
+        user: User;
+    };
+}
 
 const items = [
     {
         title: "Dashboard",
         url: "dashboard",
         icon: LayoutDashboard,
+        requireAdmin: false,
     },
     {
-        title: "Roles",
-        url: "roles",
-        icon: UserRoundCog,
+        title: "Manage Users",
+        url: "users",
+        icon: UserPen,
+        requireAdmin: true, // Add this flag for admin-only items
+    },
+    {
+        title: "Projects",
+        url: "projects",
+        icon: FolderKanban,
+        requireAdmin: false,
+    },
+    {
+        title: "Tasks",
+        url: "tasks",
+        icon: ReceiptText,
+        requireAdmin: false,
     },
 ];
 
 export function AppSidebar() {
+    const { auth } = usePage<PageProps>().props;
+    const isAdmin = auth.user?.role === 'Admin';
+
+    // Filter items based on user role
+    const filteredItems = items.filter(item =>
+        !item.requireAdmin || (item.requireAdmin && isAdmin)
+    );
+
     return (
         <Sidebar>
             <SidebarContent className="bg-gradient-to-b from-slate-800 to-gray-900">
@@ -40,7 +72,7 @@ export function AppSidebar() {
                     </SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            {items.map((item) => (
+                            {filteredItems.map((item) => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton
                                         asChild

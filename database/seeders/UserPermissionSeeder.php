@@ -18,14 +18,29 @@ class UserPermissionSeeder extends Seeder
     public function run(): void
     {
         foreach ($this->permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::findOrCreate($permission);
         }
 
 
         $user = User::create([
-            'name' => 'Taufiq',
-            'username' => 'Opik',
-            'email' => 'muhammadtaufiqrahmanhakim@gmail.com',
+            'name' => 'Admin',
+            'username' => 'Admin',
+            'email' => 'Admin@gmail.com',
+            'role' => 'Admin',
+            'password' => Hash::make('12345678')
+        ]);
+        $user = User::create([
+            'name' => 'Project Manager',
+            'username' => 'PM',
+            'email' => 'PM@gmail.com',
+            'role' => 'Project Manager',
+            'password' => Hash::make('12345678')
+        ]);
+        $user = User::create([
+            'name' => 'Team Member',
+            'username' => 'TM',
+            'email' => 'TeamMember@gmail.com',
+            'role' => 'Team Member',
             'password' => Hash::make('12345678')
         ]);
 
