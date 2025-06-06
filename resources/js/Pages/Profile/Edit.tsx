@@ -12,7 +12,7 @@ export default function Edit({
     auth,
 }: PageProps<{ mustVerifyEmail: boolean; status?: string }>) {
     return (
-        <div className='bg-teal-200 min-h-screen'>
+        <div className='bg-gray-200 min-h-screen'>
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800">
