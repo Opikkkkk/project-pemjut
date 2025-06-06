@@ -1,14 +1,29 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\RoleController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProjectController;
-use App\Http\Controllers\TaskController;
+use App\Http\Middleware\ProjectManagement;
+
+Route::middleware('auth')->group(function () {
+    // Project routes accessible to all authenticated users (view only)
+    Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
+
+    // Project management routes (restricted to Admin and Project Manager)
+    Route::middleware(ProjectManagement::class)->group(function () {
+        Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
+        Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
+    });
+
+    Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
+    Route::get('/projects/{project}/edit', [ProjectController::class, 'edit'])->name('projects.edit');
+    Route::put('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
+    Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
+});
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -24,19 +39,6 @@ Route::prefix('users')->group(function () {
     Route::delete('/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 });
 
-Route::prefix('projects')->group(function () {
-    Route::get('/', [ProjectController::class, 'index'])->name('projects');
-    Route::post('/', [ProjectController::class, 'store'])->name('projects');
-    Route::post('/{id}', [ProjectController::class, 'update'])->name('projects.update');
-    Route::delete('/{id}', [ProjectController::class, 'destroy'])->name('projects.destroy');
-});
-
-Route::prefix('tasks')->group(function () {
-    Route::get('/', [TaskController::class, 'index'])->name('tasks');
-    Route::post('/', [TaskController::class, 'store'])->name('tasks');
-    Route::post('/{id}', [TaskController::class, 'update'])->name('tasks.update');
-    Route::delete('/{id}', [TaskController::class, 'destroy'])->name('tasks.destroy');
-});
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');

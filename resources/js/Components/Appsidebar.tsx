@@ -1,4 +1,4 @@
-import { LayoutDashboard, UserRoundCog, UserPen, Zap, ReceiptText, FolderKanban, User } from "lucide-react";
+import { LayoutDashboard, UserPen, Zap, FolderKanban } from "lucide-react";
 import {
     Sidebar,
     SidebarContent,
@@ -37,14 +37,8 @@ const items = [
     },
     {
         title: "Projects",
-        url: "projects",
+        url: "projects.index",
         icon: FolderKanban,
-        requireAdmin: false,
-    },
-    {
-        title: "Tasks",
-        url: "tasks",
-        icon: ReceiptText,
         requireAdmin: false,
     },
 ];

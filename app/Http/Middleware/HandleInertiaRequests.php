@@ -4,6 +4,31 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Closure;
+use Symfony\Component\HttpFoundation\Response;
+
+class ProjectManagement
+{
+    /**
+     * Handle an incoming request.
+     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        // Check if user is authenticated
+        if (!auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        $user = auth()->user();
+
+        // Allow access only for Admin and Project Manager roles
+        if (!in_array($user->role, ['Admin', 'Project Manager'])) {
+            abort(403, 'You do not have permission to manage projects.');
+        }
+
+        return $next($request);
+    }
+}
 
 class HandleInertiaRequests extends Middleware
 {
