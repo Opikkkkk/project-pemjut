@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -26,6 +27,8 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'username' => fake()->unique()->userName(),
+            'role' => fake()->randomElement(['Admin', 'Project Manager', 'Team Member']),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
@@ -39,6 +42,36 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the user should be an admin.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => User::ROLE_ADMIN,
+        ]);
+    }
+
+    /**
+     * Indicate that the user should be a project manager.
+     */
+    public function projectManager(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => User::ROLE_PROJECT_MANAGER,
+        ]);
+    }
+
+    /**
+     * Indicate that the user should be a team member.
+     */
+    public function teamMember(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => User::ROLE_TEAM_MEMBER,
         ]);
     }
 }
