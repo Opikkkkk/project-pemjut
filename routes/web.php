@@ -8,6 +8,16 @@ use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Middleware\ProjectManagement;
+use App\Http\Controllers\DashboardController;
+
+Route::get('/', function () {
+    return redirect()->route('login');
+});
+
+// Dashboard route - HANYA SATU ROUTE UNTUK DASHBOARD
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     // Project routes accessible to all authenticated users (view only)
@@ -25,13 +35,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
 });
 
-Route::get('/', function () {
-    return redirect()->route('login');
-});
-
-// Route::post('/login', [AuthController::class, 'login'])->name('login');
-
-
+// User routes
 Route::prefix('users')->group(function () {
     Route::get('/', [UserController::class, 'index'])->name('users');
     Route::post('/', [UserController::class, 'store'])->name('users');
@@ -39,11 +43,7 @@ Route::prefix('users')->group(function () {
     Route::delete('/{id}', [UserController::class, 'destroy'])->name('users.destroy');
 });
 
-
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
+// Profile routes
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
