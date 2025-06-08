@@ -43,6 +43,36 @@ class UserPermissionSeeder extends Seeder
             'role' => 'Team Member',
             'password' => Hash::make('12345678')
         ]);
+        $user = User::create([
+            'name' => 'Roji taufik',
+            'username' => 'Roji',
+            'email' => 'roji@gmail.com',
+            'role' => 'Project Manager',
+            'password' => Hash::make('12345678')
+        ]);
+        $user = User::create([
+            'name' => 'Shafa',
+            'username' => 'Shafa',
+            'email' => 'shafa@gmail.com',
+            'role' => 'Team Member',
+            'password' => Hash::make('12345678')
+        ]);
+        $user = User::create([
+            'name' => 'Manda',
+            'username' => 'Manda',
+            'email' => 'manda@gmail.com',
+            'role' => 'Team Member',
+            'password' => Hash::make('12345678')
+        ]);
+        $user = User::create([
+            'name' => 'Taufiq',
+            'username' => 'Taufiq',
+            'email' => 'taufiq@gmail.com',
+            'role' => 'Team Member',
+            'password' => Hash::make('12345678')
+        ]);
+
+
 
         $role = Role::create(['name' => 'admin']);
 

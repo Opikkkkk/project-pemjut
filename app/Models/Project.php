@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Project extends Model
@@ -19,7 +20,6 @@ class Project extends Model
         'status',
         'leader_id',
         'created_by',
-        'member_id',
     ];
 
     protected $casts = [
@@ -52,11 +52,23 @@ class Project extends Model
     }
 
     /**
-     * Get the team member assigned to this project
+     * Get all team members assigned to this project (Many-to-Many)
+     */
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'project_members', 'project_id', 'user_id')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Get the team member assigned to this project (backward compatibility)
+     * @deprecated Use members() relationship instead
      */
     public function member(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'member_id');
+        // Untuk backward compatibility, return first member
+        $firstMember = $this->members()->first();
+        return $firstMember ? $this->belongsTo(User::class, 'id')->where('id', $firstMember->id) : $this->belongsTo(User::class, 'id')->whereNull('id');
     }
 
     /**
@@ -80,7 +92,23 @@ class Project extends Model
      */
     public function scopeByMember($query, $memberId)
     {
-        return $query->where('member_id', $memberId);
+        return $query->whereHas('members', function ($q) use ($memberId) {
+            $q->where('user_id', $memberId);
+        });
+    }
+
+    /**
+     * Scope for filtering projects where user is involved (leader, member, or creator)
+     */
+    public function scopeForUser($query, $userId)
+    {
+        return $query->where(function ($q) use ($userId) {
+            $q->where('leader_id', $userId)
+              ->orWhere('created_by', $userId)
+              ->orWhereHas('members', function ($memberQuery) use ($userId) {
+                  $memberQuery->where('user_id', $userId);
+              });
+        });
     }
 
     /**
@@ -95,5 +123,21 @@ class Project extends Model
             'On Hold' => 'red',
             default => 'gray',
         };
+    }
+
+    /**
+     * Get members count
+     */
+    public function getMembersCountAttribute()
+    {
+        return $this->members()->count();
+    }
+
+    /**
+     * Get members names as string
+     */
+    public function getMembersNamesAttribute()
+    {
+        return $this->members->pluck('name')->join(', ');
     }
 }

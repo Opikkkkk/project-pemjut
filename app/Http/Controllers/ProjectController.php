@@ -13,22 +13,44 @@ class ProjectController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        $projects = Project::with(['leader', 'createdBy', 'member'])
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($project) {
-                // Add status color for frontend
-                $project->status_color = $this->getStatusColor($project->status);
-                return $project;
-            });
+ public function index(Request $request)
+{
+    $query = Project::with(['leader', 'createdBy', 'members']);
 
-        return Inertia::render('Projects/Index', [
-            'projects' => $projects,
-            'canManage' => $this->canManageProjects()
-        ]);
+    // Handle search
+    if ($request->filled('search')) {
+        $search = $request->get('search');
+        $query->where(function ($q) use ($search) {
+            $q->where('name', 'like', "%{$search}%")
+              ->orWhere('description', 'like', "%{$search}%");
+        });
     }
+
+    // Handle status filter
+    if ($request->filled('status')) {
+        $query->where('status', $request->get('status'));
+    }
+
+    $projects = $query->orderBy('created_at', 'desc')
+        ->get()
+        ->map(function ($project) {
+            // Add status color for frontend
+            $project->status_color = $this->getStatusColor($project->status);
+            // Add members count and names
+            $project->members_count = $project->members->count();
+            $project->members_names = $project->members->pluck('name')->join(', ');
+            return $project;
+        });
+
+    return Inertia::render('Projects/Index', [
+        'projects' => $projects,
+        'filters' => [
+            'search' => $request->get('search', ''),
+            'status' => $request->get('status', ''),
+        ],
+        'canManage' => $this->canManageProjects()
+    ]);
+}
 
     /**
      * Show the form for creating a new resource.
@@ -83,13 +105,14 @@ class ProjectController extends Controller
                     }
                 },
             ],
-            'member_id' => [
+            'member_ids' => 'required|array|min:1',
+            'member_ids.*' => [
                 'required',
                 'exists:users,id',
                 function ($attribute, $value, $fail) {
                     $user = User::find($value);
                     if (!$user || $user->role !== 'Team Member') {
-                        $fail('The selected member must be a Team Member.');
+                        $fail('All selected members must be Team Members.');
                     }
                 },
             ],
@@ -98,6 +121,8 @@ class ProjectController extends Controller
             'start_date.before_or_equal' => 'Start date must be before or equal to end date.',
             'description.min' => 'Project description must be at least 10 characters.',
             'end_date.after' => 'End date must be after start date.',
+            'member_ids.required' => 'At least one team member must be selected.',
+            'member_ids.min' => 'At least one team member must be selected.',
         ]);
 
         $project = Project::create([
@@ -107,12 +132,14 @@ class ProjectController extends Controller
             'end_date' => $validated['end_date'],
             'status' => $validated['status'],
             'leader_id' => $validated['leader_id'],
-            'member_id' => $validated['member_id'],
             'created_by' => auth()->id(),
         ]);
 
+        // Attach team members to project
+        $project->members()->attach($validated['member_ids']);
+
         return redirect()->route('projects.index')
-            ->with('success', 'Project "' . $project->name . '" created successfully.');
+            ->with('success', 'Project "' . $project->name . '" created successfully with ' . count($validated['member_ids']) . ' team member(s).');
     }
 
     /**
@@ -120,7 +147,7 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        $project->load(['leader', 'createdBy', 'member']);
+        $project->load(['leader', 'createdBy', 'members']);
         $project->status_color = $this->getStatusColor($project->status);
 
         return Inertia::render('Projects/Show', [
@@ -150,8 +177,14 @@ class ProjectController extends Controller
             ->orderBy('name')
             ->get();
 
+        // Load project with members
+        $project->load(['leader', 'createdBy', 'members']);
+
+        // Add selected member IDs for the form
+        $project->selected_member_ids = $project->members->pluck('id')->toArray();
+
         return Inertia::render('Projects/Edit', [
-            'project' => $project->load(['leader', 'createdBy', 'member']),
+            'project' => $project,
             'projectManagers' => $projectManagers,
             'teamMembers' => $teamMembers
         ]);
@@ -187,13 +220,14 @@ class ProjectController extends Controller
                     }
                 },
             ],
-            'member_id' => [
+            'member_ids' => 'required|array|min:1',
+            'member_ids.*' => [
                 'required',
                 'exists:users,id',
                 function ($attribute, $value, $fail) {
                     $user = User::find($value);
                     if (!$user || $user->role !== 'Team Member') {
-                        $fail('The selected member must be a Team Member.');
+                        $fail('All selected members must be Team Members.');
                     }
                 },
             ],
@@ -201,12 +235,24 @@ class ProjectController extends Controller
             'name.unique' => 'A project with this name already exists.',
             'description.min' => 'Project description must be at least 10 characters.',
             'end_date.after' => 'End date must be after start date.',
+            'member_ids.required' => 'At least one team member must be selected.',
+            'member_ids.min' => 'At least one team member must be selected.',
         ]);
 
-        $project->update($validated);
+        $project->update([
+            'name' => $validated['name'],
+            'description' => $validated['description'],
+            'start_date' => $validated['start_date'],
+            'end_date' => $validated['end_date'],
+            'status' => $validated['status'],
+            'leader_id' => $validated['leader_id'],
+        ]);
+
+        // Sync team members (this will remove old ones and add new ones)
+        $project->members()->sync($validated['member_ids']);
 
         return redirect()->route('projects.index')
-            ->with('success', 'Project "' . $project->name . '" updated successfully.');
+            ->with('success', 'Project "' . $project->name . '" updated successfully with ' . count($validated['member_ids']) . ' team member(s).');
     }
 
     /**
@@ -214,11 +260,15 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project)
     {
-        if (!$this->canDe()) {
+        if (!$this->canDeleteProjects()) {
             abort(403, 'You do not have permission to delete projects.');
         }
 
         $projectName = $project->name;
+
+        // Detach all members before deleting project
+        $project->members()->detach();
+
         $project->delete();
 
         return redirect()->route('projects.index')
@@ -275,16 +325,14 @@ class ProjectController extends Controller
     {
         $userId = auth()->id();
 
-        $projects = Project::with(['leader', 'createdBy', 'member'])
-            ->where(function ($query) use ($userId) {
-                $query->where('leader_id', $userId)
-                      ->orWhere('member_id', $userId)
-                      ->orWhere('created_by', $userId);
-            })
+        $projects = Project::with(['leader', 'createdBy', 'members'])
+            ->forUser($userId)
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($project) {
                 $project->status_color = $this->getStatusColor($project->status);
+                $project->members_count = $project->members->count();
+                $project->members_names = $project->members->pluck('name')->join(', ');
                 return $project;
             });
 

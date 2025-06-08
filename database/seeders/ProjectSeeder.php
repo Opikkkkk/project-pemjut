@@ -28,18 +28,35 @@ class ProjectSeeder extends Seeder
         $projects = [
             [
                 'name' => 'Laravel Project Management System',
-                'description' => 'Membuat sebuah website laravel dengan fitur manajemen projek.',
+                'description' => 'Membuat sebuah website laravel dengan tema manajemen projek yang dapat membuat sebuah project dan colaborasi.',
                 'start_date' => Carbon::now()->subDays(30),
                 'end_date' => Carbon::now()->addDays(60),
-                'status' => 'In Progress',
-                'leader_id' => $projectManagers->first()->id,
-                'created_by' => $admin->id,
-                'member_id' => $teamMembers->first()->id,
-            ]
+                'status' => 'In Progress', // Sesuaikan dengan enum di migration
+                'leader_id' => 4, // Project leader (Project Manager with ID 4)
+                'created_by' => $admin->id, // User yang membuat project
+            ],
         ];
 
-        foreach ($projects as $project) {
-            Project::create($project);
+        foreach ($projects as $projectData) {
+            $project = Project::create($projectData);
+
+            // Add specific team members for project ID 1
+            if ($project->id === 1) {
+            $memberIds = [5, 6, 7];
+            } else {
+            // For other projects, use original logic
+            $memberIds = [];
+            if ($teamMembers->count() >= 3) {
+                $memberIds = $teamMembers->take(3)->pluck('id')->toArray();
+            } else {
+                $memberIds = $teamMembers->pluck('id')->toArray();
+            }
+            }
+
+            // Attach team members to project
+            $project->members()->attach($memberIds);
+
+            $this->command->info("Project '{$project->name}' created with " . count($memberIds) . " team members.");
         }
 
         $this->command->info('Projects seeded successfully!');
