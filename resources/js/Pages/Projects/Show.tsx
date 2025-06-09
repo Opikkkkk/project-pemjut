@@ -83,27 +83,7 @@ const ProjectShow: React.FC<ProjectShowProps> = ({
               </span>
             </div>
           </div>
-          <div className="flex space-x-2">
-            <Link
-              href={route('projects.edit', project.id)}
-              className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Edit Project
-            </Link>
-            <button
-              onClick={handleDelete}
-              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Delete
-            </button>
-            <Link
-              href={route('projects.index')}
-              className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Back to Projects
-            </Link>
           </div>
-        </div>
       }
     >
       <Head title={project.name} />
@@ -469,6 +449,26 @@ const ProjectShow: React.FC<ProjectShowProps> = ({
           </div>
         </div>
       </div>
+        <div className="mt-6 flex justify-end space-x-2">
+            <Link
+              href={route('projects.index')}
+              className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+            >
+              Back to Projects
+            </Link>
+            <Link
+              href={route('projects.edit', project.id)}
+              className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
+            >
+              Edit Project
+            </Link>
+            <button
+              onClick={handleDelete}
+              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+            >
+              Delete
+            </button>
+          </div>
     </AuthenticatedLayout>
   );
 };

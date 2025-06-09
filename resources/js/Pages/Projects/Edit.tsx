@@ -7,6 +7,7 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import { ProjectEditProps, ProjectFormData } from '@/types/project';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 const ProjectEdit: React.FC<ProjectEditProps> = ({
   project,
@@ -72,28 +73,33 @@ const ProjectEdit: React.FC<ProjectEditProps> = ({
     <AuthenticatedLayout
       user={auth.user}
       header={
-        <div className="flex justify-between items-center">
-          <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-            Edit Project: {project.name}
-          </h2>
-          <div className="flex space-x-2">
+        <div className="flex items-center">
+          <Link
+            href={route('projects.index')}
+            className="mr-4 inline-flex items-center justify-center p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+            title="Back to Projects"
+          >
+            <ArrowLeftIcon className="h-6 w-6" />
+          </Link>
+
+          <div className="flex flex-1 justify-between items-center">
+            
             <Link
               href={route('projects.show', project.id)}
               className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
             >
               View Project
             </Link>
-            <Link
-              href={route('projects.index')}
-              className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Back to Projects
-            </Link>
           </div>
         </div>
       }
     >
       <Head title={`Edit ${project.name}`} />
+      <div className="flex flex-1 justify-center items-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 className="font-semibold text-xl text-gray-800 leading-tight">
+          {project.name}
+        </h2>
+      </div>
 
       <div className="py-12">
         <div className="max-w-2xl mx-auto sm:px-6 lg:px-8">
@@ -327,6 +333,7 @@ const ProjectEdit: React.FC<ProjectEditProps> = ({
           </div>
         </div>
       </div>
+      
     </AuthenticatedLayout>
   );
 };

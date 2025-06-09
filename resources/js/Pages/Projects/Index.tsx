@@ -3,6 +3,21 @@ import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ProjectIndexProps, Project } from '@/types/project';
+import {
+  // ... ikon-ikon lain yang sudah ada
+  EyeIcon // Pastikan EyeIcon diimpor di sini
+} from '@heroicons/react/24/outline';
+import {
+  // ... ikon-ikon lain yang sudah ada (termasuk EyeIcon)
+  PencilSquareIcon // Tambahkan ini
+} from '@heroicons/react/24/outline';
+import {
+  // ... ikon-ikon lain yang sudah ada
+  TrashIcon // Tambahkan ini
+} from '@heroicons/react/24/outline';
+
+
+
 
 const ProjectIndex: React.FC<ProjectIndexProps> = ({
   projects,
@@ -61,14 +76,7 @@ const ProjectIndex: React.FC<ProjectIndexProps> = ({
           <h2 className="font-semibold text-xl text-gray-800 leading-tight">
             Projects
           </h2>
-          {canManage && (
-            <Link
-              href={route('projects.create')}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Create New Project
-            </Link>
-          )}
+       
         </div>
       }
     >
@@ -207,23 +215,38 @@ const ProjectIndex: React.FC<ProjectIndexProps> = ({
                       <div className="flex space-x-2">
                         <Link
                           href={route('projects.show', project.id)}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          // Tambahkan kelas untuk layout flex dan padding/margin agar ikon terlihat bagus
+                          className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium p-1 rounded-md hover:bg-blue-50"
+                          title="View Project Details" // Tambahkan title untuk aksesibilitas (tooltip saat hover)
                         >
-                          View
-                        </Link>
+                          <EyeIcon className="h-5 w-5" /> {/* Ikon View */}
+                          {/* Hapus teks "View" jika hanya ingin ikon */}
+                          {/* Atau tambahkan kembali teks jika ingin ikon dan teks: */}
+                          {/* <span className="ml-1">View</span> */}
+                      </Link>
                         {canManage && (
                           <>
                             <Link
                               href={route('projects.edit', project.id)}
-                              className="text-green-600 hover:text-green-800 text-sm font-medium"
+                              // Tambahkan kelas untuk layout flex dan padding/margin agar ikon terlihat bagus
+                              className="inline-flex items-center text-green-600 hover:text-green-800 text-sm font-medium p-1 rounded-md hover:bg-green-50"
+                              title="Edit Project" // Tambahkan title untuk aksesibilitas (tooltip saat hover)
                             >
-                              Edit
-                            </Link>
+                              <PencilSquareIcon className="h-5 w-5" /> {/* Ikon Edit */}
+                              {/* Hapus teks "Edit" jika hanya ingin ikon */}
+                              {/* Atau tambahkan kembali teks jika ingin ikon dan teks: */}
+                              {/* <span className="ml-1">Edit</span> */}
+                          </Link>
                             <button
                               onClick={() => handleDelete(project)}
-                              className="text-red-600 hover:text-red-800 text-sm font-medium"
+                              // Tambahkan kelas untuk layout flex dan padding/margin agar ikon terlihat bagus
+                              className="inline-flex items-center text-red-600 hover:text-red-800 text-sm font-medium p-1 rounded-md hover:bg-red-50"
+                              title="Delete Project" // Tambahkan title untuk aksesibilitas (tooltip saat hover)
                             >
-                              Delete
+                              <TrashIcon className="h-5 w-5" /> {/* Ikon Delete */}
+                              {/* Hapus teks "Delete" jika hanya ingin ikon */}
+                              {/* Atau tambahkan kembali teks jika ingin ikon dan teks: */}
+                              {/* <span className="ml-1">Delete</span> */}
                             </button>
                           </>
                         )}
@@ -266,8 +289,19 @@ const ProjectIndex: React.FC<ProjectIndexProps> = ({
               </div>
             </div>
           )}
+      {/* Create New Project Button at the bottom */}
+      {canManage && (
+        <div className="flex justify-end mt-8">
+          <Link
+            href={route('projects.create')}
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Create New Project
+          </Link>
         </div>
-      </div>
+      )}
+    </div>
+  </div>
     </AuthenticatedLayout>
   );
 };

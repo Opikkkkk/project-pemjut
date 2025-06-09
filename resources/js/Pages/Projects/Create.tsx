@@ -71,16 +71,33 @@ const ProjectCreate: React.FC<ProjectCreateProps> = ({
     <AuthenticatedLayout
       user={auth.user}
       header={
-        <div className="flex justify-between items-center">
-          <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-            Create New Project
-          </h2>
+        <div className="relative flex items-center justify-between min-h-[48px] px-4 sm:px-6 lg:px-8"> {/* Tambahkan px untuk padding */}
+          {/* Tombol Back - Absolute di kiri */}
           <Link
             href={route('projects.index')}
-            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+            className="absolute left-0 flex items-center text-gray-600 hover:text-gray-800 font-medium z-10" // Tambahkan z-10
           >
-            Back to Projects
+            {/* Back Arrow Icon (SVG) */}
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Back
           </Link>
+
+          {/* Judul Halaman - Di tengah */}
+          
+
+          {/* Ini adalah placeholder untuk tombol di kanan jika ada (misal: tombol edit, atau tombol create di halaman lain) */}
+          {/* Penting: jika ada tombol kanan, pastikan lebarnya sama dengan tombol kiri untuk penyejajaran tengah yang sempurna */}
+          <div className="w-[80px]"> {/* Sesuaikan lebar ini agar sama dengan lebar tombol 'Back' */}
+            {/* Atau letakkan tombol/ikon di sini jika ada */}
+          </div>
         </div>
       }
     >
@@ -88,6 +105,9 @@ const ProjectCreate: React.FC<ProjectCreateProps> = ({
 
       <div className="py-12">
         <div className="max-w-2xl mx-auto sm:px-6 lg:px-8">
+          <h2 className="font-semibold text-xl text-gray-800 leading-tight flex-grow text-center"> {/* Tambahkan flex-grow */}
+            Create New Project
+          </h2>
           <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
             <div className="p-6 text-gray-900">
               <form onSubmit={handleSubmit} className="space-y-6">

@@ -11,7 +11,7 @@ const ProfileSummary: React.FC<ProfileSummaryProps> = ({ name, profileImage }) =
       <img
         src={profileImage || '/images/opik.png'}
         alt="Profile"
-        className="w-20 h-20 object-cover bg-gray-200"
+        className="w-20 h-20 object-cover bg-gray-200"  
       />
       <div>
         <h2 className="text-xl font-semibold">{name}</h2>

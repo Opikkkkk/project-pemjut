@@ -32,11 +32,9 @@ class ProjectController extends Controller
     }
 
     $projects = $query->orderBy('created_at', 'desc')
-        ->get()
-        ->map(function ($project) {
-            // Add status color for frontend
+        ->paginate(6)
+        ->through(function ($project) {
             $project->status_color = $this->getStatusColor($project->status);
-            // Add members count and names
             $project->members_count = $project->members->count();
             $project->members_names = $project->members->pluck('name')->join(', ');
             return $project;
