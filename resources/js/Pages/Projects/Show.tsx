@@ -299,82 +299,172 @@ const ProjectShow: React.FC<ProjectShowProps> = ({
                 </div>
               )}
 
-              {/* Tasks Tab */}
-              {activeTab === 'tasks' && (
-                <div>
-                  <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-lg font-medium text-gray-900">
-                      Project Tasks ({project.tasks?.length || 0})
-                    </h3>
+            {/* Tasks Tab */}
+            {activeTab === 'tasks' && (
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Project Tasks ({project.tasks?.length || 0})
+                </h3>
+                {/* Only show Create Task button if user is project manager */}
+                {(project.leader?.id === auth.user.id || project.created_by === auth.user.id) && (
                     <Link
-                      href={route('tasks.create', { project_id: project.id })}
-                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm"
+                    href={route('tasks.create', { project_id: project.id })}
+                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm"
                     >
-                      Add New Task
+                    Add New Task
                     </Link>
-                  </div>
-
-                  {project.tasks && project.tasks.length > 0 ? (
-                    <div className="space-y-4">
-                      {project.tasks.map((task: Task) => (
-                        <div key={task.id} className="border border-gray-200 rounded-lg p-4">
-                          <div className="flex justify-between items-start mb-2">
-                            <h4 className="text-sm font-medium text-gray-900">{task.title}</h4>
-                            <div className="flex space-x-2">
-                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getTaskStatusBadgeColor(task.status)}`}>
-                                {task.status}
-                              </span>
-                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getTaskPriorityBadgeColor(task.priority)}`}>
-                                {task.priority}
-                              </span>
-                            </div>
-                          </div>
-
-                          {task.description && (
-                            <p className="text-sm text-gray-600 mb-2">{task.description}</p>
-                          )}
-
-                          <div className="flex justify-between items-center text-xs text-gray-500">
-                            <div className="flex items-center space-x-4">
-                              {task.assigned_to && (
-                                <span>Assigned to: {task.assigned_to.name}</span>
-                              )}
-                              {task.due_date && (
-                                <span>Due: {new Date(task.due_date).toLocaleDateString('id-ID')}</span>
-                              )}
-                            </div>
-                            <div className="flex space-x-2">
-                              <Link
-                                href={route('tasks.show', task.id)}
-                                className="text-blue-600 hover:text-blue-800"
-                              >
-                                View
-                              </Link>
-                              <Link
-                                href={route('tasks.edit', task.id)}
-                                className="text-green-600 hover:text-green-800"
-                              >
-                                Edit
-                              </Link>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <div className="text-gray-400 text-lg mb-2">✅</div>
-                      <p className="text-gray-500">No tasks created for this project</p>
-                      <Link
-                        href={route('tasks.create', { project_id: project.id })}
-                        className="mt-4 inline-flex items-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-700"
-                      >
-                        Create First Task
-                      </Link>
-                    </div>
-                  )}
+                )}
                 </div>
-              )}
+
+                {/* Task Status Overview */}
+                {project.tasks && project.tasks.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                    {[
+                    { status: 'To Do', count: project.tasks.filter(t => t.status === 'To Do').length, color: 'bg-gray-100 text-gray-800' },
+                    { status: 'In Progress', count: project.tasks.filter(t => t.status === 'In Progress').length, color: 'bg-blue-100 text-blue-800' },
+                    { status: 'Done', count: project.tasks.filter(t => t.status === 'Done').length, color: 'bg-green-100 text-green-800' }
+                    ].map((item) => (
+                    <div key={item.status} className="bg-white border rounded-lg p-3 text-center">
+                        <div className="text-2xl font-bold text-gray-900">{item.count}</div>
+                        <div className={`text-xs font-medium rounded-full px-2 py-1 mt-1 ${item.color}`}>
+                        {item.status}
+                        </div>
+                    </div>
+                    ))}
+                </div>
+                )}
+
+                {project.tasks && project.tasks.length > 0 ? (
+                <div className="space-y-4">
+                    {project.tasks.map((task: Task) => (
+                    <div key={task.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                        <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                            <h4 className="text-sm font-medium text-gray-900">{task.title}</h4>
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getTaskStatusBadgeColor(task.status)}`}>
+                                {task.status}
+                            </span>
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getTaskPriorityBadgeColor(task.priority)}`}>
+                                {task.priority}
+                            </span>
+                            </div>
+
+                            {task.description && (
+                            <p className="text-sm text-gray-600 mb-2 line-clamp-2">{task.description}</p>
+                            )}
+
+                            <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
+                            {task.assigned_to && (
+                                <div className="flex items-center space-x-1">
+                                <div className="h-4 w-4 rounded-full bg-gray-300 flex items-center justify-center">
+                                    <span className="text-xs font-medium text-gray-700">
+                                    {task.assigned_to.name.charAt(0).toUpperCase()}
+                                    </span>
+                                </div>
+                                <span>Assigned to: {task.assigned_to.name}</span>
+                                </div>
+                            )}
+                            {task.due_date && (
+                                <span className={`${new Date(task.due_date) < new Date() && task.status !== 'Done' ? 'text-red-600 font-medium' : ''}`}>
+                                Due: {new Date(task.due_date).toLocaleDateString('id-ID')}
+                                </span>
+                            )}
+                            <span>Task #{task.id}</span>
+                            </div>
+                        </div>
+                        </div>
+
+                        <div className="flex justify-between items-center">
+                        {/* Status Update Dropdown - Only for assigned user or project manager */}
+                        <div className="flex items-center space-x-2">
+                            {(task.assigned_to?.id === auth.user.id ||
+                            project.leader?.id === auth.user.id ||
+                            project.created_by === auth.user.id) && (
+                            <form
+                                onSubmit={(e) => {
+                                e.preventDefault();
+                                const formData = new FormData(e.target as HTMLFormElement);
+                                const status = formData.get('status') as string;
+                                router.patch(route('tasks.update-status', task.id), { status });
+                                }}
+                                className="flex items-center space-x-2"
+                            >
+                                <select
+                                name="status"
+                                defaultValue={task.status}
+                                onChange={(e) => {
+                                    router.patch(route('tasks.update-status', task.id), {
+                                    status: e.target.value
+                                    });
+                                }}
+                                className="text-xs border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                >
+                                <option value="To Do">To Do</option>
+                                <option value="In Progress">In Progress</option>
+                                <option value="Done">Done</option>
+                                </select>
+                            </form>
+                            )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center space-x-2">
+                            <Link
+                            href={route('tasks.show', task.id)}
+                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                            View
+                            </Link>
+
+                            {/* Only project managers can edit/delete tasks */}
+                            {(project.leader?.id === auth.user.id || project.created_by === auth.user.id) && (
+                            <>
+                                <span className="text-gray-300">|</span>
+                                <Link
+                                href={route('tasks.edit', task.id)}
+                                className="text-green-600 hover:text-green-800 text-sm font-medium"
+                                >
+                                Edit
+                                </Link>
+                                <span className="text-gray-300">|</span>
+                                <button
+                                onClick={() => {
+                                    if (confirm(`Are you sure you want to delete task "${task.title}"?`)) {
+                                    router.delete(route('tasks.destroy', task.id));
+                                    }
+                                }}
+                                className="text-red-600 hover:text-red-800 text-sm font-medium"
+                                >
+                                Delete
+                                </button>
+                            </>
+                            )}
+                        </div>
+                        </div>
+                    </div>
+                    ))}
+                </div>
+                ) : (
+                <div className="text-center py-8">
+                    <div className="text-gray-400 text-6xl mb-4">📋</div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No tasks created yet</h3>
+                    <p className="text-gray-500 mb-4">
+                    Start organizing your project by creating tasks for your team.
+                    </p>
+                    {(project.leader?.id === auth.user.id || project.created_by === auth.user.id) && (
+                    <Link
+                        href={route('tasks.create', { project_id: project.id })}
+                        className="inline-flex items-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-md hover:bg-blue-700"
+                    >
+                        Create First Task
+                    </Link>
+                    )}
+                </div>
+                )}
+            </div>
+            )}
             </div>
           </div>
         </div>

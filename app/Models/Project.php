@@ -35,6 +35,11 @@ class Project extends Model
         return $this->hasMany(Task::class);
     }
 
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'project_user');
+    }
+
     /**
      * Get the project leader (Project Manager)
      */
@@ -139,5 +144,21 @@ class Project extends Model
     public function getMembersNamesAttribute()
     {
         return $this->members->pluck('name')->join(', ');
+    }
+
+
+    public function isProjectManager($user): bool
+    {
+        return $this->members()
+            ->where('user_id', $user->id)
+            ->where('project_members.role', 'Project Manager')
+            ->exists() || $this->leader_id === $user->id;
+    }
+
+    public function isTeamMember($user): bool
+    {
+        return $this->members()
+            ->where('user_id', $user->id)
+            ->exists() || $this->leader_id === $user->id;
     }
 }

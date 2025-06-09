@@ -18,6 +18,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Mencegah duplikasi kombinasi project_id dan user_id
+            $table->enum('role', ['Project Manager', 'Team Member'])->default('Team Member');
             $table->unique(['project_id', 'user_id']);
         });
     }

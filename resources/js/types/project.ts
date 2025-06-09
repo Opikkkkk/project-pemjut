@@ -1,4 +1,4 @@
-// types/project.ts
+
 export interface User {
   id: number;
   name: string;
@@ -14,6 +14,7 @@ export interface Project {
   description: string;
   start_date: string;
   end_date: string;
+  tasks?: Task[];
   status: 'Planning' | 'In Progress' | 'Completed' | 'On Hold';
   leader_id: number;
   created_by: number;
@@ -24,7 +25,6 @@ export interface Project {
   leader?: User;
   created_by_user?: User;
   members?: User[];
-  tasks?: Task[];
 
   // Additional computed properties
   selected_member_ids?: number[];
@@ -37,18 +37,15 @@ export interface Task {
   id: number;
   title: string;
   description?: string;
-  status: 'To Do' | 'In Progress' | 'In Review' | 'Done';
+  status: 'To Do' | 'In Progress' | 'Done';
   priority: 'Low' | 'Medium' | 'High';
+  assigned_to?: User;
   due_date?: string;
   project_id: number;
-  assigned_to_id?: number;
-  created_by: number;
   created_at: string;
   updated_at: string;
-
   // Relationships
   project?: Project;
-  assigned_to?: User;
   created_by_user?: User;
 }
 
@@ -104,9 +101,11 @@ export interface ProjectIndexProps {
 }
 
 export interface ProjectShowProps {
-  project: Project;
-  auth: AuthUser;
+    project: Project;
+    auth: AuthUser;
+    tasks: PaginatedData<Task>;
 }
+
 
 export interface ProjectCreateProps {
   projectManagers: User[];
@@ -219,3 +218,63 @@ errors?: ValidationErrors;
 canManage?: boolean;
 asset_url?: string;
 }
+export interface TaskComment {
+    id: number;
+    task_id: number;
+    user_id: number;
+    comment: string;
+    created_at: string;
+    updated_at: string;
+    user: User;
+}
+
+export interface TaskStatistics {
+    total: number;
+    todo: number;
+    inProgress: number;
+    inReview: number;
+    done: number;
+    overdue: number;
+    dueSoon: number;
+}
+
+export interface ProjectStatistics {
+    total: number;
+    planning: number;
+    active: number;
+    onHold: number;
+    completed: number;
+    cancelled: number;
+}
+
+export interface Notification {
+    id: number;
+    user_id: number;
+    title: string;
+    message: string;
+    type: 'task_assigned' | 'task_due' | 'project_update' | 'comment_added';
+    read_at?: string;
+    data?: Record<string, any>;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface TeamMember {
+    id: number;
+    user: User;
+    project_id: number;
+    role: 'member' | 'manager' | 'viewer';
+    joined_at: string;
+}
+
+export interface ActivityLog {
+    id: number;
+    user: User;
+    action: string;
+    description: string;
+    model_type: 'project' | 'task' | 'comment';
+    model_id: number;
+    changes?: Record<string, { old: any; new: any }>;
+    created_at: string;
+}
+

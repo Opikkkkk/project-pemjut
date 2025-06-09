@@ -15,7 +15,7 @@ class ProjectController extends Controller
      */
  public function index(Request $request)
 {
-    $query = Project::with(['leader', 'createdBy', 'members']);
+      $query = Project::with(['leader', 'createdBy', 'members', 'tasks']);
 
     // Handle search
     if ($request->filled('search')) {
@@ -145,14 +145,27 @@ class ProjectController extends Controller
     /**
      * Display the specified resource.
      */
+
     public function show(Project $project)
     {
-        $project->load(['leader', 'createdBy', 'members']);
+        $project->load([
+            'leader',
+            'createdBy',
+            'members',
+            'tasks' => function($query) {
+                $query->with('assignedTo')->orderBy('created_at', 'desc');
+            }
+        ]);
         $project->status_color = $this->getStatusColor($project->status);
 
         return Inertia::render('Projects/Show', [
-            'project' => $project,
-            'canManage' => $this->canManageProjects()
+            'project' => $project->load([
+                'tasks',
+                'tasks.assignedTo',
+                'leader',
+                'members',
+                'createdBy'  // Changed from created_by_user to createdBy
+            ])
         ]);
     }
 
@@ -178,7 +191,14 @@ class ProjectController extends Controller
             ->get();
 
         // Load project with members
-        $project->load(['leader', 'createdBy', 'members']);
+        $project->load([
+        'tasks' => function($query) {
+            $query->with('assigned_to')->orderBy('created_at', 'desc');
+        },
+        'CreatedBy',
+        'leader',
+        'members'
+    ]);
 
         // Add selected member IDs for the form
         $project->selected_member_ids = $project->members->pluck('id')->toArray();
