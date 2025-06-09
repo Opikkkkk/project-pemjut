@@ -1,4 +1,4 @@
-import { LayoutDashboard, UserPen, Zap, FolderKanban } from "lucide-react";
+import { LayoutDashboard, UserPen, FolderKanban } from "lucide-react";
 import {
     Sidebar,
     SidebarContent,
@@ -33,7 +33,7 @@ const items = [
         title: "Manage Users",
         url: "users",
         icon: UserPen,
-        requireAdmin: true, // Add this flag for admin-only items
+        requireAdmin: true,
     },
     {
         title: "Projects",
@@ -45,22 +45,27 @@ const items = [
 
 export function AppSidebar() {
     const { auth } = usePage<PageProps>().props;
-    const isAdmin = auth.user?.role === 'Admin';
+    const isAdmin = auth.user?.role === "Admin";
 
-    // Filter items based on user role
-    const filteredItems = items.filter(item =>
-        !item.requireAdmin || (item.requireAdmin && isAdmin)
+    const filteredItems = items.filter(
+        (item) => !item.requireAdmin || (item.requireAdmin && isAdmin)
     );
 
     return (
         <Sidebar>
-            <SidebarContent className="bg-gradient-to-b from-slate-800 to-gray-900">
+            <SidebarContent className="bg-gradient-to-b from-slate-700 to-gray-900">
                 <SidebarGroup>
                     <SidebarGroupLabel className="mb-4">
                         <div className="flex items-center gap-4">
-                            <Zap className="text-white cursor-pointer" />
-                            <span className="text-xl text-white font-bold">
-                                Laravel TSX
+                            <Link href="/">
+                                <img
+                                    src="/images/logo.png"
+                                    alt="TIMSAR Logo"
+                                    className="w-8 h-8 cursor-pointer"
+                                />
+                            </Link>
+                            <span className="text-2xl text-white font-bold font-bebas tracking-wide">
+                                TIMSAR
                             </span>
                         </div>
                     </SidebarGroupLabel>

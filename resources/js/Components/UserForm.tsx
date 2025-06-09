@@ -248,7 +248,7 @@ export default function UserForm({ isOpen, onClose, user, roles, title }: UserFo
                             </button>
                             <button
                                 type="submit"
-                                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                                className="px-4 py-2 text-sm font-medium text-white bg-slate-800 rounded-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                                 disabled={processing}
                             >
                                 {processing ? 'Saving...' : (user ? 'Update' : 'Create')}
