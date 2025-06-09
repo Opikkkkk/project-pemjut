@@ -13,14 +13,13 @@ return new class extends Migration
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->date('start_date');
-            $table->date('end_date')->nullable();
+            $table->string('name')->unique();
+            $table->text('description');
+            $table->foreignId('leader_id')->constrained('users')->onDelete('cascade'); // Project leader (Project Manager)
+            $table->foreignId('created_by')->constrained('users')->onDelete('cascade'); // User who created the project
             $table->enum('status', ['Planning', 'In Progress', 'Completed', 'On Hold'])->default('Planning');
-            $table->foreignId('leader_id')->constrained('users')->comment('Project Leader');
-            $table->foreignId('created_by')->constrained('users');
-            $table->foreignId('member_id')->constrained('users')->comment('Team Member');
+            $table->date('start_date');
+            $table->date('end_date');
             $table->timestamps();
         });
     }

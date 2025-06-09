@@ -4,103 +4,57 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Task extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'project_id',
         'title',
         'description',
         'status',
         'priority',
+        'assigned_to',
         'due_date',
-        'project_id',
-        'created_by',
+        'completed_at',
+        'completed_by'
     ];
 
     protected $casts = [
         'due_date' => 'date',
+        'completed_at' => 'datetime',
     ];
 
-    /**
-     * Status constants
-     */
-    const STATUS_TODO = 'todo';
-    const STATUS_IN_PROGRESS = 'in_progress';
-    const STATUS_DONE = 'done';
-
-    /**
-     * Priority constants
-     */
-    const PRIORITY_LOW = 'low';
-    const PRIORITY_MEDIUM = 'medium';
-    const PRIORITY_HIGH = 'high';
-
-    /**
-     * Get all available statuses
-     */
-    public static function getStatuses()
-    {
-        return [
-            self::STATUS_TODO,
-            self::STATUS_IN_PROGRESS,
-            self::STATUS_DONE,
-        ];
-    }
-
-    /**
-     * Get all available priorities
-     */
-    public static function getPriorities()
-    {
-        return [
-            self::PRIORITY_LOW,
-            self::PRIORITY_MEDIUM,
-            self::PRIORITY_HIGH,
-        ];
-    }
-
-    /**
-     * Get the project this task belongs to
-     */
-    public function project(): BelongsTo
+    // Relasi ke Project
+    public function project()
     {
         return $this->belongsTo(Project::class);
     }
 
-    /**
-     * Get the user who created the task
-     */
-    public function creator(): BelongsTo
+    // Relasi ke User yang ditugaskan
+    public function assignedTo()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 
-    /**
-     * Get all users assigned to this task
-     */
-    public function assignedUsers(): BelongsToMany
+    // Relasi ke User yang menyelesaikan task
+    public function completedBy()
     {
-        return $this->belongsToMany(User::class, 'task_assignments');
+        return $this->belongsTo(User::class, 'completed_by');
     }
 
-    /**
-     * Get all comments for this task
-     */
-    public function comments(): HasMany
+    // Relasi ke comments
+    public function comments()
     {
         return $this->hasMany(TaskComment::class);
     }
 
-    /**
-     * Check if user is assigned to this task
-     */
-    public function isAssignedTo($userId)
+    // Method untuk check apakah user bisa update status
+    public function canUpdateStatus($user)
     {
-        return $this->assignedUsers()->where('user_id', $userId)->exists();
+        // Project manager atau user yang ditugaskan bisa update status
+        return $this->project->isProjectManager($user) ||
+               ($this->assigned_to && $this->assigned_to == $user->id);
     }
 }

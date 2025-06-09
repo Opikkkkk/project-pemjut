@@ -1,5 +1,5 @@
 // Pages/Projects/Edit.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputError from '@/Components/InputError';
@@ -21,12 +21,41 @@ const ProjectEdit: React.FC<ProjectEditProps> = ({
     end_date: project.end_date,
     status: project.status,
     leader_id: project.leader_id,
-    member_id: project.member_id,
+    member_ids: project.selected_member_ids || [],
   });
+
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     put(route('projects.update', project.id));
+  };
+
+  const handleMemberToggle = (memberId: number) => {
+    const currentIds = Array.isArray(data.member_ids) ? data.member_ids : [];
+    if (currentIds.includes(memberId)) {
+      setData('member_ids', currentIds.filter(id => id !== memberId));
+    } else {
+      setData('member_ids', [...currentIds, memberId]);
+    }
+  };
+
+  const getSelectedMembers = () => {
+    const currentIds = Array.isArray(data.member_ids) ? data.member_ids : [];
+    return teamMembers.filter(member => currentIds.includes(member.id));
+  };
+
+  const getFilteredMembers = () => {
+    return teamMembers.filter(member =>
+      member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.email.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
+  const removeMember = (memberId: number) => {
+    const currentIds = Array.isArray(data.member_ids) ? data.member_ids : [];
+    setData('member_ids', currentIds.filter(id => id !== memberId));
   };
 
   const statusOptions = [
@@ -35,6 +64,9 @@ const ProjectEdit: React.FC<ProjectEditProps> = ({
     { value: 'Completed', label: 'Completed' },
     { value: 'On Hold', label: 'On Hold' },
   ];
+
+  const selectedMembers = getSelectedMembers();
+  const filteredMembers = getFilteredMembers();
 
   return (
     <AuthenticatedLayout
@@ -171,25 +203,99 @@ const ProjectEdit: React.FC<ProjectEditProps> = ({
                   <InputError message={errors.leader_id} className="mt-2" />
                 </div>
 
-                {/* Team Member */}
+                {/* Team Members Multi-Select */}
                 <div>
-                  <InputLabel htmlFor="member_id" value="Team Member" />
-                  <select
-                    id="member_id"
-                    name="member_id"
-                    value={data.member_id}
-                    onChange={(e) => setData('member_id', e.target.value ? parseInt(e.target.value) : '')}
-                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                    required
-                  >
-                    <option value="">Select Team Member</option>
-                    {teamMembers.map((member) => (
-                      <option key={member.id} value={member.id}>
-                        {member.name} ({member.email})
-                      </option>
-                    ))}
-                  </select>
-                  <InputError message={errors.member_id} className="mt-2" />
+                  <InputLabel htmlFor="member_ids" value="Team Members" />
+
+                  {/* Selected Members Display */}
+                  {selectedMembers.length > 0 && (
+                    <div className="mt-2 mb-3">
+                      <div className="flex flex-wrap gap-2">
+                        {selectedMembers.map((member) => (
+                          <span
+                            key={member.id}
+                            className="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-700 bg-blue-100 rounded-full"
+                          >
+                            {member.name}
+                            <button
+                              type="button"
+                              onClick={() => removeMember(member.id)}
+                              className="ml-2 text-blue-500 hover:text-blue-700"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {selectedMembers.length} member(s) selected
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Dropdown */}
+                  <div className="relative">
+                    <div
+                      className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm cursor-pointer"
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    >
+                      <TextInput
+                        type="text"
+                        placeholder="Search and select team members..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onFocus={() => setIsDropdownOpen(true)}
+                        className="w-full border-0 focus:ring-0"
+                      />
+                    </div>
+
+                    {isDropdownOpen && (
+                      <div className="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-60 rounded-md border border-gray-300 overflow-auto">
+                        {filteredMembers.length === 0 ? (
+                          <div className="px-4 py-2 text-sm text-gray-500">
+                            No team members found
+                          </div>
+                        ) : (
+                          filteredMembers.map((member) => {
+                            const isSelected = Array.isArray(data.member_ids) && data.member_ids.includes(member.id);
+                            return (
+                              <div
+                                key={member.id}
+                                className={`px-4 py-2 cursor-pointer hover:bg-gray-50 flex items-center justify-between ${
+                                  isSelected ? 'bg-blue-50' : ''
+                                }`}
+                                onClick={() => handleMemberToggle(member.id)}
+                              >
+                                <div>
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {member.name}
+                                  </div>
+                                  <div className="text-sm text-gray-500">
+                                    {member.email}
+                                  </div>
+                                </div>
+                                {isSelected && (
+                                  <div className="text-blue-600">
+                                    ✓
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Click outside to close dropdown */}
+                  {isDropdownOpen && (
+                    <div
+                      className="fixed inset-0 z-5"
+                      onClick={() => setIsDropdownOpen(false)}
+                    />
+                  )}
+
+                  <InputError message={errors.member_ids} className="mt-2" />
                 </div>
 
                 {/* Project Info */}

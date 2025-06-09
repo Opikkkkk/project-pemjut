@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -91,6 +90,11 @@ class User extends Authenticatable implements JWTSubject
             self::ROLE_PROJECT_MANAGER,
             self::ROLE_TEAM_MEMBER,
         ];
+    }
+
+        public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
 

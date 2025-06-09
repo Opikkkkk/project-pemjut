@@ -1,57 +1,259 @@
-import { FormEvent } from "react";
-import { useForm } from "@inertiajs/react";
-import Authenticated from "@/Layouts/AuthenticatedLayout";
-import { PageProps, TaskFormProps } from "@/types";
+// Pages/Tasks/Create.tsx
+import React from 'react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { User, Project } from '@/types/project';
 
-export default function Create({ auth, project_id, team_members }: PageProps<TaskFormProps>) {
-    const { data, setData, post, processing, errors } = useForm({
-        title: "",
-        description: "",
-        status: "todo",
-        assigned_user_ids: [] as number[],
-    });
-
-    const handleSubmit = (e: FormEvent) => {
-        e.preventDefault();
-        post(route("projects.tasks.store", project_id));
-    };
-
-    return (
-        <Authenticated header={<h2 className="text-xl font-bold">Create Task</h2>}>
-            <form onSubmit={handleSubmit} className="space-y-4 max-w-xl">
-                <div>
-                    <label className="block mb-1">Title</label>
-                    <input type="text" className="w-full border rounded p-2" value={data.title} onChange={e => setData("title", e.target.value)} />
-                    {errors.title && <div className="text-red-500">{errors.title}</div>}
-                </div>
-                <div>
-                    <label className="block mb-1">Description</label>
-                    <textarea className="w-full border rounded p-2" rows={4} value={data.description} onChange={e => setData("description", e.target.value)} />
-                    {errors.description && <div className="text-red-500">{errors.description}</div>}
-                </div>
-                <div>
-                    <label className="block mb-1">Status</label>
-                    <select className="w-full border rounded p-2" value={data.status} onChange={e => setData("status", e.target.value as any)}>
-                        <option value="todo">To Do</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="done">Done</option>
-                    </select>
-                </div>
-                <div>
-                    <label className="block mb-1">Assign To</label>
-                    <select
-                        multiple
-                        className="w-full border rounded p-2"
-                        value={data.assigned_user_ids.map(String)}
-                        onChange={e => setData("assigned_user_ids", Array.from(e.target.selectedOptions).map(opt => parseInt(opt.value)))}
-                    >
-                        {team_members.map(user => (
-                            <option key={user.id} value={user.id}>{user.name}</option>
-                        ))}
-                    </select>
-                </div>
-                <button className="bg-blue-600 text-white px-4 py-2 rounded" disabled={processing}>Save</button>
-            </form>
-        </Authenticated>
-    );
+interface TasksCreateProps {
+  project: Project;
+  projectMembers: User[];
+  auth: {
+    user: User;
+  };
 }
+
+
+
+interface TaskFormData {
+  project_id: number;
+  title: string;
+  description: string;
+  priority: 'Low' | 'Medium' | 'High';
+  assigned_to: string;
+  due_date: string;
+}
+
+const TasksCreate: React.FC<TasksCreateProps> = ({ project, projectMembers, auth }) => {
+
+  const { data, setData, post, processing, errors } = useForm<TaskFormData>({
+    project_id: project.id,
+    title: '',
+    description: '',
+    priority: 'Medium',
+    assigned_to: '',
+    due_date: '',
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    post(route('tasks.store'));
+  };
+
+  // Filter out null/undefined members dengan logging
+let validMembers: User[] = [];
+  if (projectMembers && Array.isArray(projectMembers)) {
+    validMembers = projectMembers.filter(member => {
+      const isValid = member && member.id && member.name;
+      return isValid;
+    });
+  }
+
+
+  return (
+    <AuthenticatedLayout
+      user={auth.user}
+      header={
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="font-semibold text-xl text-gray-800 leading-tight">
+              Create New Task
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Project: {project.name}
+            </p>
+          </div>
+          <div className="flex space-x-2">
+            <Link
+              href={route('projects.show', project.id)}
+              className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+            >
+              Back to Project
+            </Link>
+          </div>
+        </div>
+      }
+    >
+      <Head title="Create Task" />
+
+      <div className="py-12">
+        <div className="max-w-3xl mx-auto sm:px-6 lg:px-8">
+          <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div className="p-6">
+              {/* Debug Panel - Remove this in production */}
+              <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded">
+                <h4 className="font-medium text-yellow-800 mb-2">Debug Info:</h4>
+                <p className="text-sm text-yellow-700">
+                  Project Members Count: {projectMembers?.length || 0}
+                </p>
+                <p className="text-sm text-yellow-700">
+                  Valid Members Count: {validMembers.length}
+                </p>
+                <p className="text-sm text-yellow-700">
+                  Project Members Type: {typeof projectMembers}
+                </p>
+                <p className="text-sm text-yellow-700">
+                  Is Array: {Array.isArray(projectMembers) ? 'Yes' : 'No'}
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Task Title */}
+                <div>
+                  <label htmlFor="title" className="block text-sm font-medium text-gray-700">
+                    Task Title *
+                  </label>
+                  <input
+                    type="text"
+                    id="title"
+                    value={data.title}
+                    onChange={(e) => setData('title', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="Enter task title"
+                    required
+                  />
+                  {errors.title && (
+                    <p className="mt-1 text-sm text-red-600">{errors.title}</p>
+                  )}
+                </div>
+
+                {/* Task Description */}
+                <div>
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                    Description
+                  </label>
+                  <textarea
+                    id="description"
+                    rows={4}
+                    value={data.description}
+                    onChange={(e) => setData('description', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="Enter task description"
+                  />
+                  {errors.description && (
+                    <p className="mt-1 text-sm text-red-600">{errors.description}</p>
+                  )}
+                </div>
+
+                {/* Priority and Assigned To */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label htmlFor="priority" className="block text-sm font-medium text-gray-700">
+                      Priority *
+                    </label>
+                    <select
+                      id="priority"
+                      value={data.priority}
+                      onChange={(e) => setData('priority', e.target.value as TaskFormData['priority'])}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      required
+                    >
+                      <option value="Low">Low</option>
+                      <option value="Medium">Medium</option>
+                      <option value="High">High</option>
+                    </select>
+                    {errors.priority && (
+                      <p className="mt-1 text-sm text-red-600">{errors.priority}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label htmlFor="assigned_to" className="block text-sm font-medium text-gray-700">
+                      Assign To
+                    </label>
+                    <select
+                      id="assigned_to"
+                      value={data.assigned_to}
+                      onChange={(e) => setData('assigned_to', e.target.value)}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    >
+                      <option value="">Select team member</option>
+                      {validMembers.length > 0 ? (
+                        validMembers.map((member) => (
+                          <option key={member.id} value={member.id}>
+                            {member.name} ({member.email})
+                          </option>
+                        ))
+                      ) : (
+                        <option disabled>No team members available</option>
+                      )}
+                    </select>
+                    {errors.assigned_to && (
+                      <p className="mt-1 text-sm text-red-600">{errors.assigned_to}</p>
+                    )}
+
+                    {/* Debug info for members */}
+                    {projectMembers && projectMembers.length === 0 && (
+                      <p className="mt-1 text-sm text-orange-600">
+                        Warning: No project members found. Make sure members are assigned to this project.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Due Date */}
+                <div>
+                  <label htmlFor="due_date" className="block text-sm font-medium text-gray-700">
+                    Due Date
+                  </label>
+                  <input
+                    type="date"
+                    id="due_date"
+                    value={data.due_date}
+                    onChange={(e) => setData('due_date', e.target.value)}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                  {errors.due_date && (
+                    <p className="mt-1 text-sm text-red-600">{errors.due_date}</p>
+                  )}
+                </div>
+
+                {/* Project Info */}
+                <div className="bg-gray-50 p-4 rounded-md">
+                  <h3 className="text-sm font-medium text-gray-900 mb-2">Project Information</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-500">Project:</span>
+                      <span className="ml-2 font-medium">{project.name}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Status:</span>
+                      <span className="ml-2 font-medium">{project.status}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Team Members:</span>
+                      <span className="ml-2 font-medium">{validMembers.length}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Project Leader:</span>
+                      <span className="ml-2 font-medium">{project.leader?.name || 'Not assigned'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
+                  <Link
+                    href={route('projects.show', project.id)}
+                    className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+                  >
+                    Cancel
+                  </Link>
+                  <button
+                    type="submit"
+                    disabled={processing}
+                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
+                  >
+                    {processing ? 'Creating...' : 'Create Task'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </AuthenticatedLayout>
+  );
+};
+
+export default TasksCreate;
