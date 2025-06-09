@@ -124,7 +124,7 @@ export interface ProjectEditProps {
 export interface TaskFormData {
   title: string;
   description?: string;
-  status: 'To Do' | 'In Progress' | 'In Review' | 'Done';
+  status: 'To Do' | 'In Progress'| 'Done';
   priority: 'Low' | 'Medium' | 'High';
   due_date?: string;
   project_id: number;
@@ -185,7 +185,7 @@ export interface DashboardProps {
 
 // Additional utility types
 export type ProjectStatus = 'Planning' | 'In Progress' | 'Completed' | 'On Hold';
-export type TaskStatus = 'To Do' | 'In Progress' | 'In Review' | 'Done';
+export type TaskStatus = 'To Do' | 'In Progress'| 'Done';
 export type TaskPriority = 'Low' | 'Medium' | 'High';
 
 // Form validation error types

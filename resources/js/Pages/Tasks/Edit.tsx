@@ -223,26 +223,34 @@ const TasksEdit: React.FC<TasksEditProps> = ({ task, project, projectMembers, au
                 {/* Due Date */}
                 <div>
                   <label htmlFor="due_date" className="block text-sm font-medium text-gray-700">
-                    Due Date
+                  Due Date
                   </label>
                   <input
-                    type="date"
-                    id="due_date"
-                    value={data.due_date}
-                    onChange={(e) => setData('due_date', e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    min={new Date().toISOString().split('T')[0]}
+                  type="date"
+                  id="due_date"
+                  value={data.due_date}
+                  onChange={(e) => setData('due_date', e.target.value)}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  min={project.start_date}
+                  max={project.end_date}
                   />
                   {errors.due_date && (
-                    <p className="mt-1 text-sm text-red-600">{errors.due_date}</p>
+                  <p className="mt-1 text-sm text-red-600">{errors.due_date}</p>
+                  )}
+                  {data.due_date && (
+                  (data.due_date < project.start_date || data.due_date > project.end_date) && (
+                    <p className="mt-1 text-sm text-red-600">
+                    Due date must be between project start date ({project.start_date.split('T')[0]}) and end date ({project.end_date.split('T')[0]})
+                    </p>
+                  )
                   )}
                   {task.due_date && (
-                    <div className="mt-2">
-                      <span className="text-xs text-gray-500">Current due date: </span>
-                      <span className="text-xs font-medium">
-                        {new Date(task.due_date).toLocaleDateString('id-ID')}
-                      </span>
-                    </div>
+                  <div className="mt-2">
+                    <span className="text-xs text-gray-500">Current due date: </span>
+                    <span className="text-xs font-medium">
+                    {new Date(task.due_date).toLocaleDateString('id-ID')}
+                    </span>
+                  </div>
                   )}
                 </div>
 

@@ -12,8 +12,6 @@ interface TasksCreateProps {
   };
 }
 
-
-
 interface TaskFormData {
   project_id: number;
   title: string;
@@ -78,23 +76,6 @@ let validMembers: User[] = [];
       <div className="py-12">
         <div className="max-w-3xl mx-auto sm:px-6 lg:px-8">
           <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-            <div className="p-6">
-              {/* Debug Panel - Remove this in production */}
-              <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded">
-                <h4 className="font-medium text-yellow-800 mb-2">Debug Info:</h4>
-                <p className="text-sm text-yellow-700">
-                  Project Members Count: {projectMembers?.length || 0}
-                </p>
-                <p className="text-sm text-yellow-700">
-                  Valid Members Count: {validMembers.length}
-                </p>
-                <p className="text-sm text-yellow-700">
-                  Project Members Type: {typeof projectMembers}
-                </p>
-                <p className="text-sm text-yellow-700">
-                  Is Array: {Array.isArray(projectMembers) ? 'Yes' : 'No'}
-                </p>
-              </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Task Title */}
@@ -201,8 +182,17 @@ let validMembers: User[] = [];
                     value={data.due_date}
                     onChange={(e) => setData('due_date', e.target.value)}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                    min={new Date().toISOString().split('T')[0]}
+                    min={project.start_date}
+                    max={project.end_date}
                   />
+                  {data.due_date && (
+                    data.due_date.split('T')[0] < project.start_date.split('T')[0] ||
+                    data.due_date.split('T')[0] > project.end_date.split('T')[0]
+                  ) && (
+                    <p className="mt-1 text-sm text-red-600">
+                      Due date must be between project start date ({project.start_date.split('T')[0]}) and end date ({project.end_date.split('T')[0]})
+                    </p>
+                  )}
                   {errors.due_date && (
                     <p className="mt-1 text-sm text-red-600">{errors.due_date}</p>
                   )}
@@ -251,7 +241,6 @@ let validMembers: User[] = [];
             </div>
           </div>
         </div>
-      </div>
     </AuthenticatedLayout>
   );
 };

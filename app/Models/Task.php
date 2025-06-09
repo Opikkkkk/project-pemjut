@@ -26,6 +26,20 @@ class Task extends Model
         'completed_at' => 'datetime',
     ];
 
+    
+    const STATUS_TODO = 'To Do';
+    const STATUS_IN_PROGRESS = 'In Progress';
+    const STATUS_DONE = 'Done';
+
+    public static function getStatuses()
+    {
+        return [
+            self::STATUS_TODO,
+            self::STATUS_IN_PROGRESS,
+            self::STATUS_DONE
+        ];
+    }
+
     // Relasi ke Project
     public function project()
     {

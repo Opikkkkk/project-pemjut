@@ -58,87 +58,100 @@ class DashboardController extends Controller
                     'completedTasks' => $completedTasks,
                     'projects' => $this->getProjectsWithProgress($user->id, 'leader')
                 ];
-            } else {
-                // Team Member can see projects they're assigned to
-                $projectsAsMember = Project::where('member_id', $user->id)->pluck('id');
-                $assignedTaskProjects = Task::whereHas('assignedUsers', function($query) use ($user) {
-                    $query->where('user_id', $user->id);
-                })->pluck('project_id')->unique();
-                
-                $allProjectIds = $projectsAsMember->merge($assignedTaskProjects)->unique();
-                $totalTasks = Task::whereIn('project_id', $allProjectIds)->count();
-                $completedTasks = Task::whereIn('project_id', $allProjectIds)
-                                     ->where('status', 'done')
-                                     ->count();
-                
-                $stats = [
-                    'totalProjects' => $allProjectIds->count(),
-                    'totalTasks' => $totalTasks,
-                    'totalUsers' => User::count(),
-                    'completedTasks' => $completedTasks,
-                    'projects' => $this->getProjectsWithProgress($user->id, 'member')
-                ];
-            }
+           } else {
+            // Team Member dapat melihat proyek yang mereka terlibat
+            $projectIds = Project::where(function($query) use ($user) {
+                $query->whereHas('members', function($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                })
+                ->orWhereHas('tasks', function($q) use ($user) {
+                    $q->where('assigned_to', $user->id);
+                });
+            })->pluck('id');
+
+            $totalTasks = Task::whereIn('project_id', $projectIds)
+                             ->orWhere('assigned_to', $user->id)
+                             ->count();
+                             
+            $completedTasks = Task::whereIn('project_id', $projectIds)
+                                 ->orWhere('assigned_to', $user->id)
+                                 ->where('status', 'done')
+                                 ->count();
             
-            Log::info('Stats calculated successfully', $stats);
-            
-        } catch (\Exception $e) {
-            Log::error('Error calculating dashboard stats: ' . $e->getMessage());
-            
-            // Return default values in case of error
             $stats = [
-                'totalProjects' => 0,
-                'totalTasks' => 0,
-                'totalUsers' => 0,
-                'completedTasks' => 0,
-                'projects' => []
+                'totalProjects' => $projectIds->count(),
+                'totalTasks' => $totalTasks,
+                'completedTasks' => $completedTasks,
+                'totalUsers' => User::count(),
+                'projects' => $this->getProjectsWithProgress($user->id, 'member')
             ];
         }
         
-        return $stats;
+        Log::info('Stats calculated successfully', $stats);
+        
+    } catch (\Exception $e) {
+        Log::error('Error calculating dashboard stats: ' . $e->getMessage());
+        $stats = [
+            'totalProjects' => 0,
+            'totalTasks' => 0,
+            'completedTasks' => 0,
+            'totalUsers' => 0,
+            'projects' => collect([])
+        ];
     }
     
-    private function getProjectsWithProgress($userId = null, $role = null)
+    return $stats;
+}
+
+    
+private function getProjectsWithProgress($userId = null, $role = null)
     {
         try {
             $query = Project::with(['leader', 'tasks']);
             
+                
             if ($userId && $role === 'leader') {
                 $query->where('leader_id', $userId);
             } elseif ($userId && $role === 'member') {
                 $query->where(function($q) use ($userId) {
-                    $q->where('member_id', $userId)
-                      ->orWhereHas('tasks.assignedUsers', function($subQ) use ($userId) {
-                          $subQ->where('user_id', $userId);
-                      });
+                    $q->whereHas('members', function($subQ) use ($userId) {
+                        $subQ->where('user_id', $userId);
+                    })
+                    ->orWhereHas('tasks', function($subQ) use ($userId) {
+                        $subQ->where('assigned_to', $userId);
+                    });
                 });
-            }
+            }   
             
             $projects = $query->get();
+        
+        return $projects->map(function ($project) {
+            // Perbaikan cara menghitung tasks dan progress
+            $totalTasks = $project->tasks->count();
+            $completedTasks = $project->tasks->filter(function($task) {
+                return $task->status === 'Done' || $task->status === 'done';
+            })->count();
             
-            return $projects->map(function ($project) {
-                // Count tasks for this project
-                $totalTasks = $project->tasks->count();
-                $completedTasks = $project->tasks->where('status', 'done')->count();
-                
-                $progress = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0;
-                
-                return [
-                    'id' => $project->id,
-                    'name' => $project->name,
-                    'status' => $project->status,
-                    'progress' => $progress,
-                    'totalTasks' => $totalTasks,
-                    'completedTasks' => $completedTasks,
-                    'leader' => [
-                        'name' => $project->leader->name ?? 'Unassigned'
-                    ]
-                ];
-            });
+            // Hitung progress
+            $progress = $totalTasks > 0 ? round(($completedTasks / $totalTasks) * 100) : 0;
             
-        } catch (\Exception $e) {
-            Log::error('Error getting projects with progress: ' . $e->getMessage());
-            return collect([]);
-        }
+            return [
+                'id' => $project->id,
+                'name' => $project->name,
+                'status' => $project->status,
+                'progress' => $progress,
+                'totalTasks' => $totalTasks,
+                'completedTasks' => $completedTasks,
+                'leader' => [
+                    'name' => $project->leader->name ?? 'Unassigned'
+                ]
+            ];
+        });
+        
+    } catch (\Exception $e) {
+        Log::error('Error getting projects with progress: ' . $e->getMessage());
+        return collect([]);
     }
+}
+
 }
