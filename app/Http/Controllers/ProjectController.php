@@ -31,6 +31,7 @@ class ProjectController extends Controller
         $query->where('status', $request->get('status'));
     }
 
+
     $projects = $query->orderBy('created_at', 'desc')
         ->paginate(6)
         ->through(function ($project) {
@@ -146,24 +147,14 @@ class ProjectController extends Controller
 
     public function show(Project $project)
     {
-        $project->load([
-            'leader',
-            'createdBy',
-            'members',
-            'tasks' => function($query) {
-                $query->with('assignedTo')->orderBy('created_at', 'desc');
-            }
-        ]);
-        $project->status_color = $this->getStatusColor($project->status);
-
+        $project->load(['leader', 'members', 'tasks.assignedTo']);
+        
         return Inertia::render('Projects/Show', [
-            'project' => $project->load([
-                'tasks',
-                'tasks.assignedTo',
-                'leader',
-                'members',
-                'createdBy'  // Changed from created_by_user to createdBy
-            ])
+            'project' => $project,
+            'can' => [
+                'edit' => auth()->user()->can('update', $project),
+                'delete' => auth()->user()->can('delete', $project),
+            ]
         ]);
     }
 
@@ -172,39 +163,14 @@ class ProjectController extends Controller
      */
     public function edit(Project $project)
     {
-        if (!$this->canManageProjects()) {
-            abort(403, 'You do not have permission to edit projects.');
-        }
-
-        // Get Project Managers for leader dropdown
-        $projectManagers = User::where('role', 'Project Manager')
-            ->select('id', 'name', 'email', 'role')
-            ->orderBy('name')
-            ->get();
-
-        // Get Team Members for member dropdown
-        $teamMembers = User::where('role', 'Team Member')
-            ->select('id', 'name', 'email', 'role')
-            ->orderBy('name')
-            ->get();
-
-        // Load project with members
-        $project->load([
-        'tasks' => function($query) {
-            $query->with('assigned_to')->orderBy('created_at', 'desc');
-        },
-        'CreatedBy',
-        'leader',
-        'members'
-    ]);
-
-        // Add selected member IDs for the form
-        $project->selected_member_ids = $project->members->pluck('id')->toArray();
-
+        $project->load(['leader', 'members', 'createdBy']);
+        
         return Inertia::render('Projects/Edit', [
-            'project' => $project,
-            'projectManagers' => $projectManagers,
-            'teamMembers' => $teamMembers
+            'project' => array_merge($project->toArray(), [
+                'selected_member_ids' => $project->members->pluck('id')->toArray(),
+            ]),
+            'projectManagers' => User::where('role', 'Project Manager')->get(),
+            'teamMembers' => User::where('role', 'Team Member')->get(),
         ]);
     }
 
@@ -213,64 +179,24 @@ class ProjectController extends Controller
      */
     public function update(Request $request, Project $project)
     {
-        if (!$this->canManageProjects()) {
-            abort(403, 'You do not have permission to update projects.');
-        }
-
         $validated = $request->validate([
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('projects', 'name')->ignore($project->id)
-            ],
-            'description' => 'required|string|min:10',
+            'name' => 'required|string|max:255',
+            'description' => 'required|string',
+            'status' => 'required|string',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
-            'status' => ['required', Rule::in(['Planning', 'In Progress', 'Completed', 'On Hold'])],
-            'leader_id' => [
-                'required',
-                'exists:users,id',
-                function ($attribute, $value, $fail) {
-                    $user = User::find($value);
-                    if (!$user || $user->role !== 'Project Manager') {
-                        $fail('The selected leader must be a Project Manager.');
-                    }
-                },
-            ],
-            'member_ids' => 'required|array|min:1',
-            'member_ids.*' => [
-                'required',
-                'exists:users,id',
-                function ($attribute, $value, $fail) {
-                    $user = User::find($value);
-                    if (!$user || $user->role !== 'Team Member') {
-                        $fail('All selected members must be Team Members.');
-                    }
-                },
-            ],
-        ], [
-            'name.unique' => 'A project with this name already exists.',
-            'description.min' => 'Project description must be at least 10 characters.',
-            'end_date.after' => 'End date must be after start date.',
-            'member_ids.required' => 'At least one team member must be selected.',
-            'member_ids.min' => 'At least one team member must be selected.',
+            'leader_id' => 'required|exists:users,id',
+            'member_ids' => 'required|array',
+            'member_ids.*' => 'exists:users,id',
         ]);
 
-        $project->update([
-            'name' => $validated['name'],
-            'description' => $validated['description'],
-            'start_date' => $validated['start_date'],
-            'end_date' => $validated['end_date'],
-            'status' => $validated['status'],
-            'leader_id' => $validated['leader_id'],
-        ]);
-
-        // Sync team members (this will remove old ones and add new ones)
+        $project->update($validated);
+        
+        // Sync team members
         $project->members()->sync($validated['member_ids']);
 
-        return redirect()->route('projects.index')
-            ->with('success', 'Project "' . $project->name . '" updated successfully with ' . count($validated['member_ids']) . ' team member(s).');
+        return redirect()->route('projects.show', $project)
+            ->with('success', 'Project updated successfully.');
     }
 
     /**

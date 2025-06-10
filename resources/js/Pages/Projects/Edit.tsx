@@ -1,6 +1,6 @@
 // Pages/Projects/Edit.tsx
 import React, { useState } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, router, useForm } from '@inertiajs/react'; // Add router import
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
@@ -17,20 +17,25 @@ const ProjectEdit: React.FC<ProjectEditProps> = ({
 }) => {
   const { data, setData, put, processing, errors } = useForm<ProjectFormData>({
     name: project.name,
-    description: project.description,
+    description: project.description || '',
     start_date: project.start_date,
     end_date: project.end_date,
     status: project.status,
-    leader_id: project.leader_id,
+    leader_id: project.leader?.id || null,
     member_ids: project.selected_member_ids || [],
   });
+
+  // Add console.log to debug
+  console.log('Project:', project);
+  console.log('Team Members:', teamMembers);
+  console.log('Selected Members:', data.member_ids);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    put(route('projects.update', project.id));
+    put(route('projects.update', project.id)); // Use put from useForm instead of router
   };
 
   const handleMemberToggle = (memberId: number) => {
@@ -43,14 +48,17 @@ const ProjectEdit: React.FC<ProjectEditProps> = ({
   };
 
   const getSelectedMembers = () => {
+    if (!teamMembers) return []; // Add null check
     const currentIds = Array.isArray(data.member_ids) ? data.member_ids : [];
     return teamMembers.filter(member => currentIds.includes(member.id));
   };
 
   const getFilteredMembers = () => {
+    if (!teamMembers) return [];
     return teamMembers.filter(member =>
-      member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchTerm.toLowerCase())
+      (member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.email.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      member.role === 'Team Member'
     );
   };
 
@@ -69,6 +77,28 @@ const ProjectEdit: React.FC<ProjectEditProps> = ({
   const selectedMembers = getSelectedMembers();
   const filteredMembers = getFilteredMembers();
 
+  const renderProjectLeaderSelect = () => (
+    <div>
+        <InputLabel htmlFor="leader_id" value="Project Leader" />
+        <select
+            id="leader_id"
+            name="leader_id"
+            value={data.leader_id || ''}
+            onChange={(e) => setData('leader_id', e.target.value ? parseInt(e.target.value) : null)}
+            className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
+            required
+        >
+            <option value="">Select Project Leader</option>
+            {projectManagers.filter(manager => manager.role === 'Project Manager').map((manager) => (
+                <option key={manager.id} value={manager.id}>
+                    {manager.name} ({manager.email})
+                </option>
+            ))}
+        </select>
+        <InputError message={errors.leader_id} className="mt-2" />
+    </div>
+  );
+
   return (
     <AuthenticatedLayout
       user={auth.user}
@@ -80,6 +110,7 @@ const ProjectEdit: React.FC<ProjectEditProps> = ({
             title="Back to Projects"
           >
             <ArrowLeftIcon className="h-6 w-6" />
+            Back
           </Link>
 
           <div className="flex flex-1 justify-between items-center">
@@ -189,25 +220,7 @@ const ProjectEdit: React.FC<ProjectEditProps> = ({
                 </div>
 
                 {/* Project Leader */}
-                <div>
-                  <InputLabel htmlFor="leader_id" value="Project Leader" />
-                  <select
-                    id="leader_id"
-                    name="leader_id"
-                    value={data.leader_id}
-                    onChange={(e) => setData('leader_id', e.target.value ? parseInt(e.target.value) : '')}
-                    className="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm"
-                    required
-                  >
-                    <option value="">Select Project Leader</option>
-                    {projectManagers.map((manager) => (
-                      <option key={manager.id} value={manager.id}>
-                        {manager.name} ({manager.email})
-                      </option>
-                    ))}
-                  </select>
-                  <InputError message={errors.leader_id} className="mt-2" />
-                </div>
+                {renderProjectLeaderSelect()}
 
                 {/* Team Members Multi-Select */}
                 <div>
@@ -317,15 +330,15 @@ const ProjectEdit: React.FC<ProjectEditProps> = ({
                 </div>
 
                 {/* Submit Button */}
-                <div className="flex items-center justify-end">
+                <div className="flex justify-end gap-2">
                   <Link
                     href={route('projects.show', project.id)}
-                    className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded mr-4"
+                    className="px-4 py-2 rounded bg-gray-500 hover:bg-gray-700 text-white"
                   >
                     Cancel
                   </Link>
-                  <PrimaryButton className="ml-4" disabled={processing}>
-                    {processing ? 'Updating...' : 'Update Project'}
+                  <PrimaryButton disabled={processing}>
+                    {processing ? 'Updating...' : 'Update'}
                   </PrimaryButton>
                 </div>
               </form>

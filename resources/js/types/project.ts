@@ -1,61 +1,63 @@
-
 export interface User {
   id: number;
   name: string;
   email: string;
-  role?: string;
-  created_at: string;
-  updated_at: string;
+  role: 'Project Manager' | 'Team Member'|'Admin';
 }
 
 export interface Project {
   id: number;
   name: string;
-  description: string;
+  description?: string;
+  status: string;
   start_date: string;
   end_date: string;
-  tasks?: Task[];
-  status: 'Planning' | 'In Progress' | 'Completed' | 'On Hold';
-  leader_id: number;
-  created_by: number;
-  created_at: string;
-  updated_at: string;
-
-  // Relationships
+  leader_id: number | null;
   leader?: User;
-  created_by_user?: User;
   members?: User[];
-
-  // Additional computed properties
   selected_member_ids?: number[];
-  tasks_count?: number;
-  members_count?: number;
-  members_names?: string;
+  created_by: number;
+  created_by_user?: User;
 }
 
 export interface Task {
+    id: number;
+    title: string;
+    description?: string;
+    status: string;
+    priority: string;
+    due_date?: string;
+    assignedTo?: {
+        id: number;
+        name: string;
+        email: string;
+    } | null;
+    project?: {
+        id: number;
+        name: string;
+    };
+    created_at: string;
+    updated_at: string;
+}
+
+export interface TaskComment {
   id: number;
-  title: string;
-  description?: string;
-  status: 'To Do' | 'In Progress' | 'Done';
-  priority: 'Low' | 'Medium' | 'High';
-  assigned_to?: User;
-  due_date?: string;
-  project_id: number;
+  comment: string;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+  };
   created_at: string;
-  updated_at: string;
-  // Relationships
-  project?: Project;
-  created_by_user?: User;
 }
 
 export interface ProjectFormData {
   name: string;
   description: string;
+  status: string;
   start_date: string;
   end_date: string;
-  status: 'Planning' | 'In Progress' | 'Completed' | 'On Hold';
-  leader_id: number | string;
+  leader_id: number | null;
   member_ids: number[];
 }
 
@@ -117,18 +119,18 @@ export interface ProjectEditProps {
   project: Project;
   projectManagers: User[];
   teamMembers: User[];
-  auth: AuthUser;
+  auth: {
+    user: User;
+  };
 }
 
 // Task related interfaces
 export interface TaskFormData {
   title: string;
-  description?: string;
-  status: 'To Do' | 'In Progress'| 'Done';
-  priority: 'Low' | 'Medium' | 'High';
-  due_date?: string;
-  project_id: number;
-  assigned_to_id?: number;
+  description: string;
+  priority: string;
+  assigned_to: string;
+  due_date: string;
 }
 
 export interface TaskIndexProps {

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Task extends Model
 {
@@ -26,49 +28,27 @@ class Task extends Model
         'completed_at' => 'datetime',
     ];
 
-    
-    const STATUS_TODO = 'To Do';
-    const STATUS_IN_PROGRESS = 'In Progress';
-    const STATUS_DONE = 'Done';
-
-    public static function getStatuses()
-    {
-        return [
-            self::STATUS_TODO,
-            self::STATUS_IN_PROGRESS,
-            self::STATUS_DONE
-        ];
-    }
-
-    // Relasi ke Project
-    public function project()
-    {
-        return $this->belongsTo(Project::class);
-    }
-
-    // Relasi ke User yang ditugaskan
-    public function assignedTo()
+    public function assignedTo(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_to');
     }
 
-    // Relasi ke User yang menyelesaikan task
-    public function completedBy()
+    public function project(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'completed_by');
+        return $this->belongsTo(Project::class);
     }
 
-    // Relasi ke comments
-    public function comments()
+    // Add comments relationship
+    public function comments(): HasMany
     {
         return $this->hasMany(TaskComment::class);
     }
 
-    // Method untuk check apakah user bisa update status
-    public function canUpdateStatus($user)
+    protected $with = ['assignedTo', 'project', 'comments'];
+
+    public function canUpdateStatus(User $user): bool
     {
-        // Project manager atau user yang ditugaskan bisa update status
-        return $this->project->isProjectManager($user) ||
-               ($this->assigned_to && $this->assigned_to == $user->id);
+        return $user->id === $this->assigned_to || 
+               $this->project->isProjectManager($user);
     }
 }

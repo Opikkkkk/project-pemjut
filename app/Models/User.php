@@ -52,9 +52,10 @@ class User extends Authenticatable implements JWTSubject
     /**
      * Role constants
      */
-    const ROLE_ADMIN = 'Admin';
+    const ROLE_PROJECT_LEADER = 'project_leader';
+    const ROLE_TEAM_MEMBER = 'team_member';
+    const ROLE_ADMIN = 'admin';
     const ROLE_PROJECT_MANAGER = 'Project Manager';
-    const ROLE_TEAM_MEMBER = 'Team Member';
 
     /**
      * Check if user is Admin
@@ -67,7 +68,7 @@ class User extends Authenticatable implements JWTSubject
     /**
      * Check if user is Project Manager
      */
-    public function isProjectManager()
+    public function isProjectManager(): bool
     {
         return $this->role === self::ROLE_PROJECT_MANAGER;
     }
@@ -75,7 +76,7 @@ class User extends Authenticatable implements JWTSubject
     /**
      * Check if user is Team Member
      */
-    public function isTeamMember()
+    public function isTeamMember(): bool
     {
         return $this->role === self::ROLE_TEAM_MEMBER;
     }
@@ -86,9 +87,10 @@ class User extends Authenticatable implements JWTSubject
     public static function getRoles()
     {
         return [
+            self::ROLE_PROJECT_LEADER,
+            self::ROLE_TEAM_MEMBER,
             self::ROLE_ADMIN,
             self::ROLE_PROJECT_MANAGER,
-            self::ROLE_TEAM_MEMBER,
         ];
     }
 

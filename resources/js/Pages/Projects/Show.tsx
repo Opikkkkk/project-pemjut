@@ -3,6 +3,12 @@ import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { ProjectShowProps, Task } from '@/types/project';
+import { 
+    EyeIcon, 
+    PencilSquareIcon, 
+    TrashIcon,
+    ArrowLeftIcon // Add this import
+} from '@heroicons/react/24/outline';
 
 const ProjectShow: React.FC<ProjectShowProps> = ({
   project,
@@ -63,12 +69,19 @@ const ProjectShow: React.FC<ProjectShowProps> = ({
     { id: 'details', label: 'Project Details', icon: '📋' },
     { id: 'members', label: `Team Members (${project.members?.length || 0})`, icon: '👥' },
     { id: 'tasks', label: `Tasks (${project.tasks?.length || 0})`, icon: '✅' },
+    
   ];
+  
 
   return (
     <AuthenticatedLayout
+      
+      
       user={auth.user}
       header={
+
+        
+        
         <div className="flex justify-between items-center">
           <div>
             <h2 className="font-semibold text-xl text-gray-800 leading-tight">
@@ -87,6 +100,7 @@ const ProjectShow: React.FC<ProjectShowProps> = ({
       }
     >
       <Head title={project.name} />
+      
 
       <div className="py-12">
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -113,6 +127,22 @@ const ProjectShow: React.FC<ProjectShowProps> = ({
           </div>
 
           {/* Tab Content */}
+            <div className="flex justify-end mb-4 gap-2">
+              <Link
+                href={route('projects.edit', project.id)}
+                className="inline-flex items-center justify-center rounded-full p-2 bg-green-100 hover:bg-green-200 transition-colors"
+                title="Edit Project"
+              >
+                <PencilSquareIcon className="h-5 w-5 text-green-700" />
+              </Link>
+              <button
+                onClick={handleDelete}
+                className="inline-flex items-center justify-center rounded-full p-2 bg-red-100 hover:bg-red-200 transition-colors"
+                title="Delete Project"
+              >
+                <TrashIcon className="h-5 w-5 text-red-700" />
+              </button>
+            </div>
           <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
             <div className="p-6">
               {/* Project Details Tab */}
@@ -235,9 +265,9 @@ const ProjectShow: React.FC<ProjectShowProps> = ({
                     </h3>
                     <Link
                       href={route('projects.edit', project.id)}
-                      className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm"
+                      className="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-md transition"
                     >
-                      Manage Members
+                      + Manage Members
                     </Link>
                   </div>
 
@@ -289,10 +319,11 @@ const ProjectShow: React.FC<ProjectShowProps> = ({
                 {/* Only show Create Task button if user is project manager */}
                 {(project.leader?.id === auth.user.id || project.created_by === auth.user.id) && (
                     <Link
-                    href={route('tasks.create', { project_id: project.id })}
-                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm"
+                      href={route('tasks.create', { project_id: project.id })}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md shadow transition-colors"
                     >
-                    Add New Task
+                      <span className="material-symbols-outlined text-base">add</span>
+                      Add Task
                     </Link>
                 )}
                 </div>
@@ -336,16 +367,16 @@ const ProjectShow: React.FC<ProjectShowProps> = ({
                             )}
 
                             <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
-                            {task.assigned_to && (
-                                <div className="flex items-center space-x-1">
-                                <div className="h-4 w-4 rounded-full bg-gray-300 flex items-center justify-center">
-                                    <span className="text-xs font-medium text-gray-700">
-                                    {task.assigned_to.name.charAt(0).toUpperCase()}
-                                    </span>
-                                </div>
-                                <span>Assigned to: {task.assigned_to.name}</span>
-                                </div>
-                            )}
+                              {task.assignedTo && (
+    <div className="flex items-center space-x-1">
+        <div className="h-4 w-4 rounded-full bg-gray-300 flex items-center justify-center">
+            <span className="text-xs font-medium text-gray-700">
+                {task.assignedTo.name.charAt(0).toUpperCase()}
+            </span>
+        </div>
+        <span>Assigned to: {task.assignedTo.name}</span>
+    </div>
+)}
                             {task.due_date && (
                                 <span className={`${new Date(task.due_date) < new Date() && task.status !== 'Done' ? 'text-red-600 font-medium' : ''}`}>
                                 Due: {new Date(task.due_date).toLocaleDateString('id-ID')}
@@ -359,7 +390,7 @@ const ProjectShow: React.FC<ProjectShowProps> = ({
                         <div className="flex justify-between items-center">
                         {/* Status Update Dropdown - Only for assigned user or project manager */}
                         <div className="flex items-center space-x-2">
-                            {(task.assigned_to?.id === auth.user.id ||
+                            {(task.assignedTo?.id === auth.user.id ||
                             project.leader?.id === auth.user.id ||
                             project.created_by === auth.user.id) && (
                             <form
@@ -391,35 +422,36 @@ const ProjectShow: React.FC<ProjectShowProps> = ({
 
                         {/* Action Buttons */}
                         <div className="flex items-center space-x-2">
+                            {/* View button - always visible */}
                             <Link
-                            href={route('tasks.show', task.id)}
-                            className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                href={route('tasks.show', task.id)}
+                                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                             >
-                            View
+                                <EyeIcon className="h-5 w-5" />
                             </Link>
 
-                            {/* Only project managers can edit/delete tasks */}
+                            {/* Edit/Delete buttons - only for project managers */}
                             {(project.leader?.id === auth.user.id || project.created_by === auth.user.id) && (
-                            <>
-                                <span className="text-gray-300">|</span>
-                                <Link
-                                href={route('tasks.edit', task.id)}
-                                className="text-green-600 hover:text-green-800 text-sm font-medium"
-                                >
-                                Edit
-                                </Link>
-                                <span className="text-gray-300">|</span>
-                                <button
-                                onClick={() => {
-                                    if (confirm(`Are you sure you want to delete task "${task.title}"?`)) {
-                                    router.delete(route('tasks.destroy', task.id));
-                                    }
-                                }}
-                                className="text-red-600 hover:text-red-800 text-sm font-medium"
-                                >
-                                Delete
-                                </button>
-                            </>
+                                <>
+                                    <span className="text-gray-300">|</span>
+                                    <Link
+                                        href={route('tasks.edit', task.id)}
+                                        className="text-green-600 hover:text-green-800 text-sm font-medium"
+                                    >
+                                        <PencilSquareIcon className="h-5 w-5" />
+                                    </Link>
+                                    <span className="text-gray-300">|</span>
+                                    <button
+                                        onClick={() => {
+                                            if (confirm(`Are you sure you want to delete task "${task.title}"?`)) {
+                                                router.delete(route('tasks.destroy', task.id));
+                                            }
+                                        }}
+                                        className="text-red-600 hover:text-red-800 text-sm font-medium"
+                                    >
+                                        <TrashIcon className="h-5 w-5" />
+                                    </button>
+                                </>
                             )}
                         </div>
                         </div>
@@ -448,28 +480,23 @@ const ProjectShow: React.FC<ProjectShowProps> = ({
             </div>
           </div>
         </div>
+        
       </div>
+      <div className="flex-1"></div>
         <div className="mt-6 flex justify-end space-x-2">
-            <Link
+           <Link
               href={route('projects.index')}
-              className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+              className="inline-flex items-center justify-center p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+              title="Back to Projects"
             >
-              Back to Projects
+              <ArrowLeftIcon className="h-6 w-6" />
+              Back
             </Link>
-            <Link
-              href={route('projects.edit', project.id)}
-              className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Edit Project
-            </Link>
-            <button
-              onClick={handleDelete}
-              className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Delete
-            </button>
+            <div className="flex-1"></div>
+           
           </div>
     </AuthenticatedLayout>
+    
   );
 };
 
