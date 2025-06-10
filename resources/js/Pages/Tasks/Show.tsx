@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Task, User, TaskComment } from '@/types/project';
+import { PencilSquareIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, TrashIcon } from 'lucide-react';
 
 interface TaskShowProps {
   task: Task & {
@@ -104,32 +106,7 @@ const TaskShow: React.FC<TaskShowProps> = ({
               </span>
             </div>
           </div>
-          <div className="flex space-x-2">
-            {isProjectManager && (
-              <>
-                <Link
-                  href={route('tasks.edit', task.id)}
-                  className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded"
-                >
-                  Edit Task
-                </Link>
-                <button
-                  onClick={handleDelete}
-                  className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
-                >
-                  Delete
-                </button>
-              </>
-            )}
-            {task.project && (
-              <Link
-                href={route('projects.show', task.project?.id)}
-                className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-              >
-                Back to Project
-              </Link>
-            )}
-          </div>
+         
         </div>
       }
     >
@@ -162,6 +139,22 @@ const TaskShow: React.FC<TaskShowProps> = ({
                 >
                   <span className="mr-2">💬</span>
                   Comments ({task.comments?.length || 0})
+                </button>
+                 <Link
+                  href={route('tasks.edit', task.id)}
+                  className="inline-flex items-center text-green-600 hover:text-green-800 text-sm font-medium p-1 rounded-md hover:bg-green-50"
+                  title="Edit Task"
+                >
+                  <PencilSquareIcon className="h-5 w-5" />
+                  {/* <span className="ml-1">Edit</span> */}
+                </Link>
+                <button
+                  onClick={handleDelete}
+                  className="inline-flex items-center text-red-600 hover:text-red-800 text-sm font-medium p-1 rounded-md hover:bg-red-50"
+                  title="Delete Task"
+                >
+                  <TrashIcon className="h-5 w-5" />
+                  {/* <span className="ml-1">Delete</span> */}
                 </button>
               </nav>
             </div>
@@ -243,18 +236,18 @@ const TaskShow: React.FC<TaskShowProps> = ({
                       <div>
                         <label className="block text-sm font-medium text-gray-700">Assigned To</label>
                         <div className="mt-1">
-                          {task.assigned_to ? (
+                          {task.assignedTo ? (
                             <div className="flex items-center">
                               <div className="flex-shrink-0 h-8 w-8">
                                 <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
                                   <span className="text-sm font-medium text-gray-700">
-                                    {task.assigned_to.name.charAt(0).toUpperCase()}
+                                    {task.assignedTo?.name ? task.assignedTo.name.charAt(0).toUpperCase() : '?'}
                                   </span>
                                 </div>
                               </div>
                               <div className="ml-3">
-                                <p className="text-sm font-medium text-gray-900">{task.assigned_to.name}</p>
-                                <p className="text-sm text-gray-500">{task.assigned_to.email}</p>
+                                <p className="text-sm font-medium text-gray-900">{task.assignedTo.name}</p>
+                                <p className="text-sm text-gray-500">{task.assignedTo.email}</p>
                               </div>
                             </div>
                           ) : (
@@ -375,12 +368,12 @@ const TaskShow: React.FC<TaskShowProps> = ({
                                 <div className="flex-shrink-0 h-8 w-8">
                                   <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
                                     <span className="text-sm font-medium text-gray-700">
-                                      {comment.user.name.charAt(0).toUpperCase()}
+                                      {comment.user?.name ? comment.user.name.charAt(0).toUpperCase() : '?'}
                                     </span>
                                   </div>
                                 </div>
                                 <div>
-                                  <p className="text-sm font-medium text-gray-900">{comment.user.name}</p>
+                                  <p className="text-sm font-medium text-gray-900">{comment.user?.name || 'Unknown User'}</p>
                                   <p className="text-xs text-gray-500">
                                     {new Date(comment.created_at).toLocaleDateString('id-ID', {
                                       year: 'numeric',
@@ -420,6 +413,14 @@ const TaskShow: React.FC<TaskShowProps> = ({
           </div>
         </div>
       </div>
+      <Link
+        href={route('projects.index')}
+        className="inline-flex items-center justify-center p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+        title="Back to Projects"
+      >
+        <ArrowLeftIcon className="h-6 w-6" />
+        Back
+      </Link>
     </AuthenticatedLayout>
   );
 };

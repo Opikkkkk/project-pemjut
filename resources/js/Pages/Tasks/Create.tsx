@@ -3,6 +3,7 @@ import React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { User, Project } from '@/types/project';
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 interface TasksCreateProps {
   project: Project;
@@ -52,20 +53,14 @@ let validMembers: User[] = [];
       user={auth.user}
       header={
         <div className="flex justify-between items-center">
-          <div>
-            <h2 className="font-semibold text-xl text-gray-800 leading-tight">
-              Create New Task
-            </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Project: {project.name}
-            </p>
-          </div>
           <div className="flex space-x-2">
             <Link
-              href={route('projects.show', project.id)}
-              className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Back to Project
+              href={route('projects.index')}
+              className="mr-4 inline-flex items-center justify-center p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+              title="Back to Projects"
+          >
+            <ArrowLeftIcon className="h-6 w-6" />
+            Back
             </Link>
           </div>
         </div>
@@ -78,7 +73,15 @@ let validMembers: User[] = [];
           <div className="bg-white overflow-hidden shadow-sm sm:rounded-lg">
 
               <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="flex justify-center items-center">
+                  <p className="text-lg text-gray-800 mt-1 text-center font-bold">
+                  Project: {project.name}
+                  </p>
+                </div>
                 {/* Task Title */}
+                <h2 className="font-semibold text-xl text-gray-800 leading-tight">
+                  Create New Task
+                </h2>
                 <div>
                   <label htmlFor="title" className="block text-sm font-medium text-gray-700">
                     Task Title *

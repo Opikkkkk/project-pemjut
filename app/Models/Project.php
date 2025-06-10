@@ -15,12 +15,14 @@ class Project extends Model
     protected $fillable = [
         'name',
         'description',
+        'status',
         'start_date',
         'end_date',
-        'status',
         'leader_id',
-        'created_by',
+        'created_by'
     ];
+
+    protected $with = ['leader', 'members', 'createdBy'];
 
     protected $casts = [
         'start_date' => 'date',
@@ -33,11 +35,6 @@ class Project extends Model
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
-    }
-
-    public function users()
-    {
-        return $this->belongsToMany(User::class, 'project_user');
     }
 
     /**

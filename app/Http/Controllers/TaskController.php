@@ -73,45 +73,19 @@ class TaskController extends Controller
 
     public function show(Task $task)
     {
-        // Check authorization
-        // Allow all users to view, but keep track if they're part of the project
-        $isTeamMember = $task->project->isTeamMember(auth()->user());
-
-        // Load all necessary relationships
-        $task->load([
-            'project',
-            'assignedTo',
-            'completedBy',
-            'comments' => function($query) {
-                $query->orderBy('created_at', 'desc');
-            },
-            'comments.user'
-        ]);
-
         return Inertia::render('Tasks/Show', [
-            'task' => $task,
+            'task' => $task->load(['project', 'assignedTo', 'comments.user']),
             'canUpdateStatus' => $task->canUpdateStatus(auth()->user()),
-            'isProjectManager' => $task->project->isProjectManager(auth()->user())
+            'isProjectManager' => $task->project->isProjectManager(auth()->user()),
         ]);
     }
 
     public function edit(Task $task)
     {
-        // Check authorization
-        if (!$task->project->isProjectManager(auth()->user())) {
-            abort(403, 'Only project managers can edit tasks');
-        }
-
-        // Load task with relationships
-        $task->load(['project.leader', 'assignedTo']);
-
-        // Get project members correctly
-        $projectMembers = $task->project->members()->get();
-
         return Inertia::render('Tasks/Edit', [
-            'task' => $task,
+            'task' => $task->load(['project', 'assignedTo']),
             'project' => $task->project,
-            'projectMembers' => $projectMembers
+            'projectMembers' => $task->project->members
         ]);
     }
 

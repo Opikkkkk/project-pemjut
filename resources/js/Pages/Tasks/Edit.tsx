@@ -3,6 +3,7 @@ import React from 'react';
 import { Head, Link, useForm } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { User, Project, Task } from '@/types/project';
+import { ArrowLeftIcon } from 'lucide-react';
 
 interface TasksEditProps {
   task: Task;
@@ -22,13 +23,13 @@ interface TaskFormData {
 }
 
 const TasksEdit: React.FC<TasksEditProps> = ({ task, project, projectMembers, auth }) => {
-  const { data, setData, put, processing, errors } = useForm<TaskFormData>({
-    title: task.title,
-    description: task.description || '',
-    priority: task.priority,
-    assigned_to: task.assigned_to?.id?.toString() || '',
-    due_date: task.due_date || '',
-  });
+    const { data, setData, put, processing, errors } = useForm<TaskFormData>({
+        title: task.title,
+        description: task.description || '',
+        priority: task.priority,
+        assigned_to: task.assignedTo?.id?.toString() || '',
+        due_date: task.due_date || '',
+    });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,12 +81,7 @@ const TasksEdit: React.FC<TasksEditProps> = ({ task, project, projectMembers, au
             </div>
           </div>
           <div className="flex space-x-2">
-            <Link
-              href={route('tasks.show', task.id)}
-              className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Back to Task
-            </Link>
+           
           </div>
         </div>
       }
@@ -211,10 +207,12 @@ const TasksEdit: React.FC<TasksEditProps> = ({ task, project, projectMembers, au
                     {errors.assigned_to && (
                       <p className="mt-1 text-sm text-red-600">{errors.assigned_to}</p>
                     )}
-                    {task.assigned_to && (
+                    {task.assignedTo && (
                       <div className="mt-2">
                         <span className="text-xs text-gray-500">Currently assigned to: </span>
-                        <span className="text-xs font-medium">{task.assigned_to.name}</span>
+                        <span className="text-xs font-medium">
+                          {task.assignedTo?.name || 'Not assigned'}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -315,6 +313,14 @@ const TasksEdit: React.FC<TasksEditProps> = ({ task, project, projectMembers, au
           </div>
         </div>
       </div>
+       <Link
+              href={route('projects.index')}
+              className="inline-flex items-center justify-center p-2 rounded-full text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+              title="Back to Projects"
+            >
+              <ArrowLeftIcon className="h-6 w-6" />
+              Back
+            </Link>
     </AuthenticatedLayout>
   );
 };
