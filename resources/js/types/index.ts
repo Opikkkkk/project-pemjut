@@ -4,6 +4,7 @@ export interface User {
     email: string;
     username: string;
     role: 'Admin' | 'Project Manager' | 'Team Member';
+    profile_image?: string | null;
     email_verified_at?: string;
     created_at: string;
     updated_at: string;
