@@ -59,7 +59,7 @@ https://drive.google.com/file/d/1XfN-PWuAEMBrPYUW4gHzsb633C8JXjj6/view?usp=drive
 
 ## 🧩 ERD (Entity Relationship Diagram)
 
-![ERD Project Management System]([docs/erd.png](https://github.com/user-attachments/assets/d6b9ee99-aa69-430d-bca9-ea24d967a137))  
+![ERD Website](https://github.com/user-attachments/assets/8841448f-d5ff-432c-985b-08893da2bb86)
 
 
 
